@@ -1,0 +1,23 @@
+{
+  "page": {
+    "title": "Conflux Builder",
+    "description": "Conflux Builder ensures the integrity of every build. Each artifact is accompanied by a provenance file, cryptographically guaranteeing that it was compiled securely within our trusted GitHub Actions workflow.",
+    "form": {
+      "versionTag": "Version Tag",
+      "versionTagPlaceholder": "Select a version...",
+      "loadingTags": "Loading tags...",
+      "os": "Operating System",
+      "osPlaceholder": "Select OS...",
+      "linux": "Linux",
+      "windows": "Windows",
+      "macos": "macOS",
+      "arch": "CPU Architecture",
+      "archPlaceholder": "Select architecture...",
+      "x86_64": "x86_64",
+      "aarch64": "aarch64",
+      "staticOpenssl": "Statically link OpenSSL (Linux only)",
+      "compatibilityMode": "Enable compatibility mode for older CPUs",
+      "buildButton": "Build Now"
+    }
+  }
+}

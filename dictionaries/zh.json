@@ -1,0 +1,23 @@
+{
+  "page": {
+    "title": "Conflux 构建器",
+    "description": "Conflux Builder 确保每次构建的完整性。每个构建产物都附有一个出处文件，通过加密方式保证其源自我们受信任的 GitHub Actions 工作流，安全可靠。",
+    "form": {
+      "versionTag": "版本标签",
+      "versionTagPlaceholder": "请选择一个版本...",
+      "loadingTags": "正在加载标签...",
+      "os": "操作系统",
+      "osPlaceholder": "请选择操作系统...",
+      "linux": "Linux",
+      "windows": "Windows",
+      "macos": "macOS",
+      "arch": "CPU 架构",
+      "archPlaceholder": "请选择架构...",
+      "x86_64": "x86_64",
+      "aarch64": "aarch64",
+      "staticOpenssl": "静态链接 OpenSSL (仅限 Linux)",
+      "compatibilityMode": "为旧版 CPU 启用兼容模式",
+      "buildButton": "立即构建"
+    }
+  }
+}
