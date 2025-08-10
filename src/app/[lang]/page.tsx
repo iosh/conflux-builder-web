@@ -31,7 +31,9 @@ export default async function Home({
     arch: "x86_64",
     versionTag: latestTag?.name || "",
     commitSha: latestTag?.commit.sha || "",
+    glibcVersion: '2.39',
     staticOpenssl: true,
+    opensslVersion: "3",
     compatibilityMode: false,
   };
 

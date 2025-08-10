@@ -4,20 +4,42 @@
     "description": "Conflux Builder ensures the integrity of every build. Each artifact is accompanied by a provenance file, cryptographically guaranteeing that it was compiled securely within our trusted GitHub Actions workflow.",
     "form": {
       "versionTag": "Version Tag",
-      "versionTagPlaceholder": "Select a version...",
-      "loadingTags": "Loading tags...",
+      "versionTagPlaceholder": "Select a version",
       "os": "Operating System",
-      "osPlaceholder": "Select OS...",
+      "osPlaceholder": "Select an OS",
       "linux": "Linux",
       "windows": "Windows",
       "macos": "macOS",
-      "arch": "CPU Architecture",
-      "archPlaceholder": "Select architecture...",
+      "arch": "Architecture",
+      "archPlaceholder": "Select an architecture",
       "x86_64": "x86_64",
       "aarch64": "aarch64",
-      "staticOpenssl": "Statically link OpenSSL (Linux only)",
-      "compatibilityMode": "Enable compatibility mode for older CPUs",
-      "buildButton": "Build Now"
+      "glibcVersion": "Glibc Version (for Linux)",
+      "glibcVersionPlaceholder": "Select glibc version",
+      "glibcVersion227": "2.27 (Ubuntu 18.04)",
+      "glibcVersion231": "2.31 (Ubuntu 20.04)",
+      "glibcVersion235": "2.35 (Ubuntu 22.04)",
+      "glibcVersion239": "2.39 (Ubuntu 24.04)",
+      "opensslVersion": "OpenSSL Version",
+      "opensslVersionPlaceholder": "Select OpenSSL version",
+      "opensslVersion1": "OpenSSL 1.1.1",
+      "opensslVersion3": "OpenSSL 3.x",
+      "staticOpenssl": "Statically link OpenSSL",
+      "compatibilityMode": "Enable compatibility mode",
+
+      "buildButton": "Start Build",
+      "submittingText": "Submitting...",
+      "downloadNow": "Download Now",
+      "status": {
+        "checking": "Checking build status...",
+        "error": "Error checking status",
+        "success": "Build successful! Preparing download...",
+        "failed": "Build failed. Check logs",
+        "workflowRun": "Workflow Run",
+        "inProgress": "Build status: in_progress...",
+        "queued": "Build status: queued...",
+        "pending": "Workflow run not found yet."
+      }
     }
   }
 }

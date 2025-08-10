@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "2687e52a-41c6-4f74-b473-e1e09a8282e7",
+  "id": "4b061f96-5d97-4fb7-99b7-fe2401f0f359",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "builds": {
@@ -14,8 +14,8 @@
           "notNull": true,
           "autoincrement": false
         },
-        "commit_hash": {
-          "name": "commit_hash",
+        "commit_sha": {
+          "name": "commit_sha",
           "type": "text",
           "primaryKey": false,
           "notNull": true,

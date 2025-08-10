@@ -1,6 +1,6 @@
 CREATE TABLE `builds` (
 	`id` integer PRIMARY KEY NOT NULL,
-	`commit_hash` text NOT NULL,
+	`commit_sha` text NOT NULL,
 	`version_tag` text NOT NULL,
 	`os` text NOT NULL,
 	`arch` text NOT NULL,

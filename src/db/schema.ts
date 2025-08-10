@@ -11,7 +11,7 @@ export const tags = sqliteTable('tags', {
 
 export const builds = sqliteTable('builds', {
   id: integer('id').primaryKey(),
-  commitHash: text('commit_hash').notNull(),
+  commitSha: text('commit_sha').notNull(),
   versionTag: text('version_tag').notNull(),
   os: text('os', { enum: ['linux', 'windows', 'macos'] }).notNull(),
   arch: text('arch', { enum: ['x86_64', 'aarch64'] }).notNull(),
