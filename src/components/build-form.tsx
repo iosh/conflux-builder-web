@@ -164,218 +164,235 @@ export default function BuildForm({
       }}
       className="mt-8 w-full space-y-6 rounded-lg bg-white/80 p-8 shadow-2xl backdrop-blur-sm dark:bg-black/80"
     >
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <form.Field
-          name="versionTag"
-          children={(field) => (
-            <div>
-              <label
-                htmlFor="version-tag"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-              >
-                {dictionary.page.form.versionTag}
-              </label>
-              <Select
-                value={field.state.value}
-                onValueChange={(value) => field.handleChange(value)}
-              >
-                <SelectTrigger id="version-tag" className="mt-1">
-                  <SelectValue
-                    placeholder={dictionary.page.form.versionTagPlaceholder}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {tags.map((tag) => (
-                    <SelectItem key={tag.node_id} value={tag.name}>
-                      {tag.name}
+      <div className="grid grid-cols-1 gap-x-6 gap-y-8 md:grid-cols-6">
+        <div className="md:col-span-2">
+          <form.Field
+            name="versionTag"
+            children={(field) => (
+              <div>
+                <label
+                  htmlFor="version-tag"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  {dictionary.page.form.versionTag}
+                </label>
+                <Select
+                  value={field.state.value}
+                  onValueChange={(value) => field.handleChange(value)}
+                >
+                  <SelectTrigger id="version-tag" className="mt-1">
+                    <SelectValue
+                      placeholder={dictionary.page.form.versionTagPlaceholder}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tags.map((tag) => (
+                      <SelectItem key={tag.node_id} value={tag.name}>
+                        {tag.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          />
+        </div>
+
+        <div className="md:col-span-2">
+          <form.Field
+            name="os"
+            children={(field) => (
+              <div>
+                <label
+                  htmlFor="os"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  {dictionary.page.form.os}
+                </label>
+                <Select
+                  value={field.state.value}
+                  onValueChange={(value) => field.handleChange(value)}
+                >
+                  <SelectTrigger id="os" className="mt-1">
+                    <SelectValue
+                      placeholder={dictionary.page.form.osPlaceholder}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="linux">
+                      {dictionary.page.form.linux}
                     </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-        />
+                    <SelectItem value="windows">
+                      {dictionary.page.form.windows}
+                    </SelectItem>
+                    <SelectItem value="macos">
+                      {dictionary.page.form.macos}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          />
+        </div>
 
-        <form.Field
-          name="os"
-          children={(field) => (
-            <div>
-              <label
-                htmlFor="os"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-              >
-                {dictionary.page.form.os}
-              </label>
-              <Select
-                value={field.state.value}
-                onValueChange={(value) => field.handleChange(value)}
-              >
-                <SelectTrigger id="os" className="mt-1">
-                  <SelectValue
-                    placeholder={dictionary.page.form.osPlaceholder}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="linux">
-                    {dictionary.page.form.linux}
-                  </SelectItem>
-                  <SelectItem value="windows">
-                    {dictionary.page.form.windows}
-                  </SelectItem>
-                  <SelectItem value="macos">
-                    {dictionary.page.form.macos}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-        />
-        <form.Field
-          name="arch"
-          children={(field) => (
-            <div>
-              <label
-                htmlFor="arch"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-              >
-                {dictionary.page.form.arch}
-              </label>
-              <Select
-                value={field.state.value}
-                onValueChange={(value) => field.handleChange(value)}
-              >
-                <SelectTrigger id="arch" className="mt-1">
-                  <SelectValue
-                    placeholder={dictionary.page.form.archPlaceholder}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="x86_64">
-                    {dictionary.page.form.x86_64}
-                  </SelectItem>
-                  <SelectItem value="aarch64">
-                    {dictionary.page.form.aarch64}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-        />
-      </div>
+        <div className="md:col-span-2">
+          <form.Field
+            name="arch"
+            children={(field) => (
+              <div>
+                <label
+                  htmlFor="arch"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  {dictionary.page.form.arch}
+                </label>
+                <Select
+                  value={field.state.value}
+                  onValueChange={(value) => field.handleChange(value)}
+                >
+                  <SelectTrigger id="arch" className="mt-1">
+                    <SelectValue
+                      placeholder={dictionary.page.form.archPlaceholder}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="x86_64">
+                      {dictionary.page.form.x86_64}
+                    </SelectItem>
+                    <SelectItem value="aarch64">
+                      {dictionary.page.form.aarch64}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          />
+        </div>
 
-      {osValue === "linux" && (
-        <form.Field
-          name="glibcVersion"
-          children={(field) => (
-            <div>
-              <label
-                htmlFor="glibcVersion"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-              >
-                {dictionary.page.form.glibcVersion}
-              </label>
-              <Select
-                value={field.state.value}
-                onValueChange={(value) => field.handleChange(value)}
-              >
-                <SelectTrigger id="glibcVersion" className="mt-1">
-                  <SelectValue
-                    placeholder={dictionary.page.form.glibcVersionPlaceholder}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="2.27">
-                    {dictionary.page.form.glibcVersion227}
-                  </SelectItem>
-                  <SelectItem value="2.31">
-                    {dictionary.page.form.glibcVersion231}
-                  </SelectItem>
-                  <SelectItem value="2.35">
-                    {dictionary.page.form.glibcVersion235}
-                  </SelectItem>
-                  <SelectItem value="2.39">
-                    {dictionary.page.form.glibcVersion239}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-        />
-      )}
+        <div className="md:col-span-3">
+          <form.Field
+            name="opensslVersion"
+            children={(field) => (
+              <div>
+                <label
+                  htmlFor="opensslVersion"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  {dictionary.page.form.opensslVersion}
+                </label>
+                <Select
+                  value={field.state.value}
+                  onValueChange={(value) => field.handleChange(value)}
+                >
+                  <SelectTrigger id="opensslVersion" className="mt-1">
+                    <SelectValue
+                      placeholder={
+                        dictionary.page.form.opensslVersionPlaceholder
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">
+                      {dictionary.page.form.opensslVersion1}
+                    </SelectItem>
+                    <SelectItem value="3">
+                      {dictionary.page.form.opensslVersion3}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          />
+        </div>
 
-      <form.Field
-        name="opensslVersion"
-        children={(field) => (
-          <div>
-            <label
-              htmlFor="opensslVersion"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-            >
-              {dictionary.page.form.opensslVersion}
-            </label>
-            <Select
-              value={field.state.value}
-              onValueChange={(value) => field.handleChange(value)}
-            >
-              <SelectTrigger id="opensslVersion" className="mt-1">
-                <SelectValue
-                  placeholder={dictionary.page.form.opensslVersionPlaceholder}
-                />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">
-                  {dictionary.page.form.opensslVersion1}
-                </SelectItem>
-                <SelectItem value="3">
-                  {dictionary.page.form.opensslVersion3}
-                </SelectItem>
-              </SelectContent>
-            </Select>
+        {osValue === "linux" && (
+          <div className="md:col-span-3">
+            <form.Field
+              name="glibcVersion"
+              children={(field) => (
+                <div>
+                  <label
+                    htmlFor="glibcVersion"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    {dictionary.page.form.glibcVersion}
+                  </label>
+                  <Select
+                    value={field.state.value}
+                    onValueChange={(value) => field.handleChange(value)}
+                  >
+                    <SelectTrigger id="glibcVersion" className="mt-1">
+                      <SelectValue
+                        placeholder={
+                          dictionary.page.form.glibcVersionPlaceholder
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="2.27">
+                        {dictionary.page.form.glibcVersion227}
+                      </SelectItem>
+                      <SelectItem value="2.31">
+                        {dictionary.page.form.glibcVersion231}
+                      </SelectItem>
+                      <SelectItem value="2.35">
+                        {dictionary.page.form.glibcVersion235}
+                      </SelectItem>
+                      <SelectItem value="2.39">
+                        {dictionary.page.form.glibcVersion239}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            />
           </div>
         )}
-      />
 
-      <div className="space-y-4">
-        <form.Field
-          name="staticOpenssl"
-          children={(field) => (
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="static-openssl"
-                checked={field.state.value}
-                onCheckedChange={(checked) =>
-                  field.handleChange(Boolean(checked))
-                }
-              />
-              <label
-                htmlFor="static-openssl"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                {dictionary.page.form.staticOpenssl}
-              </label>
-            </div>
-          )}
-        />
-        <form.Field
-          name="compatibilityMode"
-          children={(field) => (
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="compatibility-mode"
-                checked={field.state.value}
-                onCheckedChange={(checked) =>
-                  field.handleChange(Boolean(checked))
-                }
-              />
-              <label
-                htmlFor="compatibility-mode"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                {dictionary.page.form.compatibilityMode}
-              </label>
-            </div>
-          )}
-        />
+        <div className="md:col-span-6">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <form.Field
+              name="staticOpenssl"
+              children={(field) => (
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="static-openssl"
+                    checked={field.state.value}
+                    onCheckedChange={(checked) =>
+                      field.handleChange(Boolean(checked))
+                    }
+                  />
+                  <label
+                    htmlFor="static-openssl"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    {dictionary.page.form.staticOpenssl}
+                  </label>
+                </div>
+              )}
+            />
+            <form.Field
+              name="compatibilityMode"
+              children={(field) => (
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="compatibility-mode"
+                    checked={field.state.value}
+                    onCheckedChange={(checked) =>
+                      field.handleChange(Boolean(checked))
+                    }
+                  />
+                  <label
+                    htmlFor="compatibility-mode"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    {dictionary.page.form.compatibilityMode}
+                  </label>
+                </div>
+              )}
+            />
+          </div>
+        </div>
       </div>
 
       <form.Subscribe

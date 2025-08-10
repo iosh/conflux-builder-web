@@ -20,10 +20,6 @@ export async function GET(
   }
 
   try {
-    // TODO: We need a way to link a build record to a workflow run.
-    // This could be by storing the workflow_run_id in our database
-    // after triggering the build. For now, this is a placeholder.
-
     // 1. Find the build in our database
     const build = await db.query.builds.findFirst({
       where: eq(builds.id, buildId),
@@ -38,14 +34,9 @@ export async function GET(
       await octokit.actions.listWorkflowRunsForRepo({
         owner: BUILDER.owner,
         repo: BUILDER.repo,
-        // We can filter by the actor who triggered the workflow,
-        // the branch, event type etc. to narrow down the search.
         event: "workflow_dispatch",
       });
 
-    // 3. Find the specific workflow run.
-    // This logic is tricky without a direct run_id. We might need to find
-    // the most recent run for the specific commit_sha and version_tag.
     const relevantRun = workflowRuns.workflow_runs.find(
       (run) => run.head_sha === build.commitSha
       // More checks might be needed here

@@ -102,9 +102,9 @@ export async function POST(request: Request) {
           commit_sha: data.commitSha,
           os: data.os,
           arch: data.arch,
-          static_openssl: data.staticOpenssl.toString(),
+          static_openssl: data.staticOpenssl,
           openssl_version: data.opensslVersion,
-          compatibility_mode: data.compatibilityMode.toString(),
+          compatibility_mode: data.compatibilityMode,
         },
       });
 
