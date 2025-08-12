@@ -1,52 +1,56 @@
 {
   "page": {
     "title": "Conflux 构建器",
-    "description": "Conflux Builder 确保每次构建的完整性。每个构建产物都附有一个出处文件，通过加密方式保证其源自我们受信任的 GitHub Actions 工作流，安全可靠。",
+    "description": "Conflux Builder 保障每个构建产物的完整性。每个文件都配有来源证明，通过密码学技术确保其来自可信的 GitHub Actions 构建流程。",
     "form": {
       "versionTag": "版本标签",
-      "versionTagPlaceholder": "请选择版本",
+      "versionTagPlaceholder": "选择版本",
+      "selectVersionTitle": "选择版本",
+      "selectVersionDescription": "选择版本以查看发布文件或启动新构建",
       "os": "操作系统",
-      "osPlaceholder": "请选择操作系统",
+      "osPlaceholder": "选择操作系统",
       "linux": "Linux",
       "windows": "Windows",
       "macos": "macOS",
       "arch": "架构",
-      "archPlaceholder": "请选择架构",
+      "archPlaceholder": "选择架构",
       "x86_64": "x86_64",
       "aarch64": "aarch64",
       "glibcVersion": "Glibc 版本 (Linux)",
-      "glibcVersionPlaceholder": "请选择 glibc 版本",
+      "glibcVersionPlaceholder": "选择 glibc 版本",
       "glibcVersion227": "2.27 (Ubuntu 18.04)",
       "glibcVersion231": "2.31 (Ubuntu 20.04)",
       "glibcVersion235": "2.35 (Ubuntu 22.04)",
       "glibcVersion239": "2.39 (Ubuntu 24.04)",
       "opensslVersion": "OpenSSL 版本",
-      "opensslVersionPlaceholder": "请选择 OpenSSL 版本",
+      "opensslVersionPlaceholder": "选择 OpenSSL 版本",
       "opensslVersion1": "OpenSSL 1.1.1",
       "opensslVersion3": "OpenSSL 3.x",
       "staticOpenssl": "静态链接 OpenSSL",
-      "compatibilityMode": "启用兼容模式",
+      "compatibilityMode": "开启兼容模式",
 
+      "noReleaseFoundDescription": "该版本还没有构建好的文件，现在开始构建吗？",
       "buildButton": "开始构建",
       "submittingText": "提交中...",
       "downloadNow": "立即下载",
       "status": {
-        "checking": "正在检查构建状态...",
-        "error": "检查状态时出错",
-        "success": "构建成功！正在准备下载...",
-        "failed": "构建失败，请检查日志",
-        "workflowRun": "工作流运行",
-        "inProgress": "构建状态：进行中...",
-        "queued": "构建状态：排队中...",
-        "pending": "暂未找到工作流运行。"
+        "checking": "检查构建状态中...",
+        "error": "状态检查出错",
+        "success": "构建完成！准备下载...",
+        "failed": "构建失败，查看日志",
+        "workflowRun": "工作流程",
+        "inProgress": "构建进行中...",
+        "queued": "构建排队中...",
+        "pending": "工作流程尚未开始"
       }
     },
     "assetTable": {
       "version": "版本",
-      "assetName": "资源名称",
+      "assetName": "文件名",
       "size": "大小",
       "download": "下载",
-      "noAssets": "此版本暂无可用资源。"
+      "noAssets": "该版本暂无可下载文件",
+      "noTagsFound": "未找到版本信息，无法显示构建选项"
     }
   }
 }

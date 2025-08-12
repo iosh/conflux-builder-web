@@ -37,7 +37,7 @@ export default function ReleaseList({
   const { assetTable } = dictionary.page;
 
   return (
-    <div className="mt-8 w-full overflow-hidden rounded-lg border shadow-sm">
+    <div className="mt-8 w-full overflow-hidden rounded-lg ">
       <div className="p-4">
         <h3 className="text-lg font-semibold">{release.name}</h3>
         <p className="text-sm text-muted-foreground">

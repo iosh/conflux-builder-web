@@ -5,6 +5,8 @@
     "form": {
       "versionTag": "Version Tag",
       "versionTagPlaceholder": "Select a version",
+      "selectVersionTitle": "Select Version",
+      "selectVersionDescription": "Choose a version to see the available release assets or start a new build.",
       "os": "Operating System",
       "osPlaceholder": "Select an OS",
       "linux": "Linux",
@@ -27,6 +29,7 @@
       "staticOpenssl": "Statically link OpenSSL",
       "compatibilityMode": "Enable compatibility mode",
 
+      "noReleaseFoundDescription": "Do you want to build it now? You can customize the build options below.",
       "buildButton": "Start Build",
       "submittingText": "Submitting...",
       "downloadNow": "Download Now",
@@ -46,7 +49,8 @@
       "assetName": "Asset Name",
       "size": "Size",
       "download": "Download",
-      "noAssets": "No assets found for this release."
+      "noAssets": "No assets found for this release.",
+      "noTagsFound": "No versions found. Unable to display build options or releases."
     }
   }
 }

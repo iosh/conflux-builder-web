@@ -14,9 +14,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import BuildForm from "./build-form";
 import ReleaseList from "./release-list";
+import NoReleaseFound from "./no-release-found";
 
 type Dictionary = Awaited<ReturnType<typeof getDictionary>>;
 type Tags = Awaited<ReturnType<typeof getAndCacheTags>>;
@@ -48,8 +56,12 @@ export default function MainContent({
 }: MainContentProps) {
   const [selectedTag, setSelectedTag] = useState(initialBuildValues.versionTag);
   const [selectedSha, setSelectedSha] = useState(initialBuildValues.commitSha);
+  const [showBuildForm, setShowBuildForm] = useState(false);
 
-  const builderTag = selectedTag && selectedSha ? `${selectedTag}-${selectedSha.substring(0, 7)}` : "";
+  const builderTag =
+    selectedTag && selectedSha
+      ? `${selectedTag}-${selectedSha.substring(0, 7)}`
+      : "";
 
   const {
     data: release,
@@ -58,7 +70,13 @@ export default function MainContent({
   } = useQuery<Release | null, Error>({
     queryKey: ["release", builderTag],
     queryFn: () => fetchReleaseByTag(builderTag),
-    initialData: builderTag === `${initialBuildValues.versionTag}-${initialBuildValues.commitSha.substring(0, 7)}` ? initialRelease : undefined,
+    initialData:
+      builderTag ===
+      `${
+        initialBuildValues.versionTag
+      }-${initialBuildValues.commitSha.substring(0, 7)}`
+        ? initialRelease
+        : undefined,
     enabled: !!builderTag,
   });
 
@@ -67,9 +85,17 @@ export default function MainContent({
     if (selected) {
       setSelectedTag(selected.name);
       setSelectedSha(selected.commit.sha);
+      setShowBuildForm(false); // Reset form visibility on version change
     }
   };
 
+  if (!tags || tags.length === 0) {
+    return (
+      <div className="mt-8 text-center text-muted-foreground">
+        <p>{dictionary.page.assetTable.noTagsFound}</p>
+      </div>
+    );
+  }
   const renderContent = () => {
     if (isLoading) {
       return <Skeleton className="mt-8 h-64 w-full" />;
@@ -80,25 +106,36 @@ export default function MainContent({
     if (release) {
       return <ReleaseList release={release} dictionary={dictionary} />;
     }
-    
-    // If release is null (not found) or there was no tag, show the build form
-    const formInitValues = { ...initialBuildValues, versionTag: selectedTag, commitSha: selectedSha };
-    return <BuildForm dictionary={dictionary} tags={tags} initValues={formInitValues} />;
+
+    // If release is not found, show the prompt
+    if (!release && !isLoading) {
+      return (
+        <NoReleaseFound
+          dictionary={dictionary}
+          onBuildClick={() => setShowBuildForm(true)}
+        />
+      );
+    }
+
+    return null; // Should not be reached
   };
 
   return (
-    <div className="w-full max-w-4xl">
-      <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3">
-        <div className="md:col-span-1">
-          <label
-            htmlFor="version-select"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-          >
+    <Card className="w-full max-w-4xl mt-8">
+      <CardHeader>
+        <CardTitle>{dictionary.page.form.selectVersionTitle}</CardTitle>
+        <CardDescription>
+          {dictionary.page.form.selectVersionDescription}
+        </CardDescription>
+        <div className="mt-4">
+          <label htmlFor="version-select" className="sr-only">
             {dictionary.page.form.versionTag}
           </label>
           <Select value={selectedTag} onValueChange={handleVersionChange}>
-            <SelectTrigger id="version-select" className="mt-1">
-              <SelectValue placeholder={dictionary.page.form.versionTagPlaceholder} />
+            <SelectTrigger id="version-select" className="w-full md:w-1/3">
+              <SelectValue
+                placeholder={dictionary.page.form.versionTagPlaceholder}
+              />
             </SelectTrigger>
             <SelectContent>
               {tags.map((tag) => (
@@ -109,9 +146,23 @@ export default function MainContent({
             </SelectContent>
           </Select>
         </div>
-      </div>
-
-      {renderContent()}
-    </div>
+      </CardHeader>
+      <CardContent>
+        {renderContent()}
+        {showBuildForm && (
+          <div className="mt-6">
+            <BuildForm
+              dictionary={dictionary}
+              tags={tags}
+              initValues={{
+                ...initialBuildValues,
+                versionTag: selectedTag,
+                commitSha: selectedSha,
+              }}
+            />
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
