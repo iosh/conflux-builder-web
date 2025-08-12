@@ -56,7 +56,7 @@ export default function MainContent({
 }: MainContentProps) {
   const [selectedTag, setSelectedTag] = useState(initialBuildValues.versionTag);
   const [selectedSha, setSelectedSha] = useState(initialBuildValues.commitSha);
-  const [showBuildForm, setShowBuildForm] = useState(false);
+  const [showBuildForm, setShowBuildForm] = useState(!initialRelease);
 
   const builderTag =
     selectedTag && selectedSha
@@ -104,7 +104,19 @@ export default function MainContent({
       return <p className="mt-8 text-center text-red-500">{error.message}</p>;
     }
     if (release) {
-      return <ReleaseList release={release} dictionary={dictionary} />;
+      return (
+        <>
+          <ReleaseList release={release} dictionary={dictionary} />
+          <div className="mt-6 text-center">
+            <button
+              onClick={() => setShowBuildForm(true)}
+              className="text-sm text-muted-foreground hover:text-foreground"
+            >
+              {dictionary.page.form.customBuildPrompt}
+            </button>
+          </div>
+        </>
+      );
     }
 
     // If release is not found, show the prompt
@@ -121,48 +133,60 @@ export default function MainContent({
   };
 
   return (
-    <Card className="w-full max-w-4xl mt-8">
-      <CardHeader>
-        <CardTitle>{dictionary.page.form.selectVersionTitle}</CardTitle>
-        <CardDescription>
+    <div className="w-full max-w-4xl mt-8">
+      <div className="space-y-2">
+        <h2 className="text-2xl font-bold tracking-tight">
+          {dictionary.page.form.selectVersionTitle}
+        </h2>
+        <p className="text-muted-foreground">
           {dictionary.page.form.selectVersionDescription}
-        </CardDescription>
-        <div className="mt-4">
-          <label htmlFor="version-select" className="sr-only">
-            {dictionary.page.form.versionTag}
-          </label>
-          <Select value={selectedTag} onValueChange={handleVersionChange}>
-            <SelectTrigger id="version-select" className="w-full md:w-1/3">
-              <SelectValue
-                placeholder={dictionary.page.form.versionTagPlaceholder}
-              />
-            </SelectTrigger>
-            <SelectContent>
-              {tags.map((tag) => (
-                <SelectItem key={tag.node_id} value={tag.name}>
-                  {tag.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </CardHeader>
-      <CardContent>
-        {renderContent()}
-        {showBuildForm && (
-          <div className="mt-6">
-            <BuildForm
-              dictionary={dictionary}
-              tags={tags}
-              initValues={{
-                ...initialBuildValues,
-                versionTag: selectedTag,
-                commitSha: selectedSha,
-              }}
+        </p>
+      </div>
+      <div className="mt-4">
+        <label htmlFor="version-select" className="sr-only">
+          {dictionary.page.form.versionTag}
+        </label>
+        <Select value={selectedTag} onValueChange={handleVersionChange}>
+          <SelectTrigger id="version-select" className="w-full md:w-1/3">
+            <SelectValue
+              placeholder={dictionary.page.form.versionTagPlaceholder}
             />
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          </SelectTrigger>
+          <SelectContent>
+            {tags.map((tag) => (
+              <SelectItem key={tag.node_id} value={tag.name}>
+                {tag.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="mt-8">{renderContent()}</div>
+
+      {showBuildForm && (
+        <div className="mt-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>{dictionary.page.form.title}</CardTitle>
+              <CardDescription>
+                {dictionary.page.form.description}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <BuildForm
+                dictionary={dictionary}
+                tags={tags}
+                initValues={{
+                  ...initialBuildValues,
+                  versionTag: selectedTag,
+                  commitSha: selectedSha,
+                }}
+              />
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </div>
   );
 }

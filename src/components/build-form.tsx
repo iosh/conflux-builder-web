@@ -162,7 +162,7 @@ export default function BuildForm({
         e.stopPropagation();
         form.handleSubmit();
       }}
-      className="mt-8 w-full space-y-6 rounded-lg bg-white/80 p-8 shadow-2xl backdrop-blur-sm dark:bg-black/80"
+      className="mt-8 w-full space-y-6 rounded-lg bg-white/80 p-8 backdrop-blur-sm dark:bg-black/80"
     >
       <div className="grid grid-cols-1 gap-x-6 gap-y-8 md:grid-cols-6">
         <div className="md:col-span-2">

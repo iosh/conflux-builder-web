@@ -29,6 +29,9 @@
       "staticOpenssl": "Statically link OpenSSL",
       "compatibilityMode": "Enable compatibility mode",
 
+      "title": "Custom Build",
+      "description": "Customize your build options below.",
+      "customBuildPrompt": "Don't see what you need? Click here to build.",
       "noReleaseFoundDescription": "Do you want to build it now? You can customize the build options below.",
       "buildButton": "Start Build",
       "submittingText": "Submitting...",
