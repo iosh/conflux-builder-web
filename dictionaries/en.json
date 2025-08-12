@@ -40,6 +40,13 @@
         "queued": "Build status: queued...",
         "pending": "Workflow run not found yet."
       }
+    },
+    "assetTable": {
+      "version": "Version",
+      "assetName": "Asset Name",
+      "size": "Size",
+      "download": "Download",
+      "noAssets": "No assets found for this release."
     }
   }
 }

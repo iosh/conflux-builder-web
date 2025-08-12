@@ -4,7 +4,7 @@
     "description": "Conflux Builder 确保每次构建的完整性。每个构建产物都附有一个出处文件，通过加密方式保证其源自我们受信任的 GitHub Actions 工作流，安全可靠。",
     "form": {
       "versionTag": "版本标签",
-      "versionTagPlaceholder": "请选择一个版本",
+      "versionTagPlaceholder": "请选择版本",
       "os": "操作系统",
       "osPlaceholder": "请选择操作系统",
       "linux": "Linux",
@@ -14,7 +14,7 @@
       "archPlaceholder": "请选择架构",
       "x86_64": "x86_64",
       "aarch64": "aarch64",
-      "glibcVersion": "Glibc 版本 (适用于 Linux)",
+      "glibcVersion": "Glibc 版本 (Linux)",
       "glibcVersionPlaceholder": "请选择 glibc 版本",
       "glibcVersion227": "2.27 (Ubuntu 18.04)",
       "glibcVersion231": "2.31 (Ubuntu 20.04)",
@@ -36,10 +36,17 @@
         "success": "构建成功！正在准备下载...",
         "failed": "构建失败，请检查日志",
         "workflowRun": "工作流运行",
-        "inProgress": "构建状态: 进行中...",
-        "queued": "构建状态: 排队中...",
+        "inProgress": "构建状态：进行中...",
+        "queued": "构建状态：排队中...",
         "pending": "暂未找到工作流运行。"
       }
+    },
+    "assetTable": {
+      "version": "版本",
+      "assetName": "资源名称",
+      "size": "大小",
+      "download": "下载",
+      "noAssets": "此版本暂无可用资源。"
     }
   }
 }

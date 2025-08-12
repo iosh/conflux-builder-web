@@ -5,9 +5,10 @@ import { getDictionary } from "@/get-dictionary";
 import { Locale } from "@/i18n-config";
 import { getAndCacheTags } from "@/lib/tags";
 import LocaleSwitcher from "@/components/locale-switcher";
-import BuildForm from "@/components/build-form";
 import { headers } from "next/headers";
 import { BuildFormValues } from "@/shared/form";
+import { getReleaseByTag } from "@/lib/releases";
+import MainContent from "@/components/main-content";
 
 function getOS(userAgent: string): "linux" | "windows" | "macos" {
   if (/mac/i.test(userAgent)) return "macos";
@@ -26,12 +27,19 @@ export default async function Home({
   const userAgent = (await headers()).get("user-agent") || "";
   const latestTag = tags.find((t) => !t.name.includes("testnet"));
 
-  const initValues: BuildFormValues = {
+  const initialBuilderTag =
+    latestTag?.name && latestTag?.commit.sha
+      ? `${latestTag.name}-${latestTag.commit.sha.substring(0, 7)}`
+      : "";
+
+  const initialRelease = await getReleaseByTag(initialBuilderTag);
+
+  const initialBuildValues: BuildFormValues = {
     os: getOS(userAgent),
     arch: "x86_64",
     versionTag: latestTag?.name || "",
     commitSha: latestTag?.commit.sha || "",
-    glibcVersion: '2.39',
+    glibcVersion: "2.39",
     staticOpenssl: true,
     opensslVersion: "3",
     compatibilityMode: false,
@@ -55,10 +63,11 @@ export default async function Home({
           {dictionary.page.description}
         </p>
 
-        <BuildForm
+        <MainContent
           dictionary={dictionary}
           tags={tags}
-          initValues={initValues}
+          initialRelease={initialRelease}
+          initialBuildValues={initialBuildValues}
         />
       </div>
       <RetroGrid />
