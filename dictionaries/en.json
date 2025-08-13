@@ -5,8 +5,6 @@
     "form": {
       "versionTag": "Version Tag",
       "versionTagPlaceholder": "Select a version",
-      "selectVersionTitle": "Select Version",
-      "selectVersionDescription": "Choose a version to see the available release assets or start a new build.",
       "os": "Operating System",
       "osPlaceholder": "Select an OS",
       "linux": "Linux",
@@ -47,12 +45,24 @@
     },
     "assetTable": {
       "version": "Version",
-      "assetName": "Asset Name",
-      "size": "Size",
+      "buildArtifact": "Build Artifact",
+      "provenance": "Provenance",
       "download": "Download",
+      "portable": "Portable",
+      "viewOnGitHub": "View on GitHub",
       "noAssets": "No assets found for this release.",
       "noAssetsFoundForThisVersion": "No assets found for this version. You can create a new build using the form above.",
       "noTagsFound": "No versions found. Unable to display build options or releases."
+    },
+    "provenanceHelper": {
+      "title": "Verify with Provenance",
+      "description": "All builds come with a provenance attestation file. You can use the 'gh' CLI to verify the integrity and origin of your download.",
+      "command": "gh attestation verify {{BINARY_NAME}} -R iosh/conflux-builder",
+      "learnMore": {
+        "text": "Learn more about",
+        "linkText": "verifying attestations on GitHub Docs",
+        "linkHref": "https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations#verifying-an-artifact-attestation-for-binaries"
+      }
     }
   }
 }

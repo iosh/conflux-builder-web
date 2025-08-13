@@ -5,8 +5,6 @@
     "form": {
       "versionTag": "版本标签",
       "versionTagPlaceholder": "选择版本",
-      "selectVersionTitle": "选择版本",
-      "selectVersionDescription": "选择版本以查看发布文件或启动新构建",
       "os": "操作系统",
       "osPlaceholder": "选择操作系统",
       "linux": "Linux",
@@ -47,12 +45,24 @@
     },
     "assetTable": {
       "version": "版本",
-      "assetName": "文件名",
-      "size": "大小",
+      "buildArtifact": "构建产物",
+      "provenance": "来源证明",
       "download": "下载",
+      "portable": "兼容模式",
+      "viewOnGitHub": "在 GitHub 上查看",
       "noAssets": "该版本暂无可下载文件",
       "noAssetsFoundForThisVersion": "未找到此版本的任何构建产物。您可以使用上面的表单创建一个新的构建。",
       "noTagsFound": "未找到版本信息，无法显示构建选项"
+    },
+    "provenanceHelper": {
+      "title": "使用来源信息进行验证",
+      "description": "所有构建都附带一个来源证明文件。您可以使用 'gh' 命令行工具来验证您下载文件的完整性和来源。",
+      "command": "gh attestation verify {{BINARY_NAME}} -R iosh/conflux-builder",
+      "learnMore": {
+        "text": "在 GitHub 文档中了解更多关于",
+        "linkText": "验证来源证明的信息",
+        "linkHref": "https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations#verifying-an-artifact-attestation-for-binaries"
+      }
     }
   }
 }

@@ -24,6 +24,7 @@ interface BuildFormProps {
   initValues: BuildFormValues;
   dictionary: Dictionary;
   tags: Tags;
+  onValuesChange?: (values: BuildFormValues) => void;
 }
 
 async function postBuildRequest(
@@ -49,6 +50,7 @@ export default function BuildForm({
   initValues,
   dictionary,
   tags,
+  onValuesChange,
 }: BuildFormProps) {
   const [buildId, setBuildId] = useState<number | null>(null);
   const [pollingEnabled, setPollingEnabled] = useState(false);
@@ -99,6 +101,14 @@ export default function BuildForm({
   });
 
   const osValue = useStore(form.store, (state) => state.values.os);
+
+  const formValues = useStore(form.store, (state) => state.values);
+
+  useEffect(() => {
+    if (onValuesChange) {
+      onValuesChange(formValues);
+    }
+  }, [formValues, onValuesChange]);
 
   const getBuildStatusMessage = () => {
     const statusDict = dictionary.page.form.status;
@@ -178,7 +188,13 @@ export default function BuildForm({
                 </label>
                 <Select
                   value={field.state.value}
-                  onValueChange={(value) => field.handleChange(value)}
+                  onValueChange={(value) => {
+                    const selectedTag = tags.find((t) => t.name === value);
+                    if (selectedTag) {
+                      form.setFieldValue("commitSha", selectedTag.commit.sha);
+                    }
+                    field.handleChange(value);
+                  }}
                 >
                   <SelectTrigger id="version-tag" className="mt-1">
                     <SelectValue
@@ -211,7 +227,9 @@ export default function BuildForm({
                 </label>
                 <Select
                   value={field.state.value}
-                  onValueChange={(value) => field.handleChange(value)}
+                  onValueChange={(value: BuildFormValues["os"]) =>
+                    field.handleChange(value)
+                  }
                 >
                   <SelectTrigger id="os" className="mt-1">
                     <SelectValue
@@ -248,7 +266,9 @@ export default function BuildForm({
                 </label>
                 <Select
                   value={field.state.value}
-                  onValueChange={(value) => field.handleChange(value)}
+                  onValueChange={(value: BuildFormValues["arch"]) =>
+                    field.handleChange(value)
+                  }
                 >
                   <SelectTrigger id="arch" className="mt-1">
                     <SelectValue
@@ -282,7 +302,9 @@ export default function BuildForm({
                 </label>
                 <Select
                   value={field.state.value}
-                  onValueChange={(value) => field.handleChange(value)}
+                  onValueChange={(value: BuildFormValues["opensslVersion"]) =>
+                    field.handleChange(value)
+                  }
                 >
                   <SelectTrigger id="opensslVersion" className="mt-1">
                     <SelectValue
@@ -319,7 +341,9 @@ export default function BuildForm({
                   </label>
                   <Select
                     value={field.state.value}
-                    onValueChange={(value) => field.handleChange(value)}
+                    onValueChange={(
+                      value: NonNullable<BuildFormValues["glibcVersion"]>
+                    ) => field.handleChange(value)}
                   >
                     <SelectTrigger id="glibcVersion" className="mt-1">
                       <SelectValue

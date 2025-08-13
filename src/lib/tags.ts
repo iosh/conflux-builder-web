@@ -2,6 +2,10 @@ import { db } from "@/db";
 import { tags as tagsSchema } from "@/db/schema";
 import { Octokit } from "@octokit/rest";
 import { desc } from "drizzle-orm";
+import { RestEndpointMethodTypes } from "@octokit/rest";
+
+export type GitHubTag =
+  RestEndpointMethodTypes["repos"]["listTags"]["response"]["data"][number];
 
 const octokit = new Octokit({
   auth: process.env.GITHUB_TOKEN,

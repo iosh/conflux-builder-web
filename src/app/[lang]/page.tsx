@@ -8,8 +8,6 @@ import LocaleSwitcher from "@/components/locale-switcher";
 import { headers } from "next/headers";
 import { BuildFormValues } from "@/shared/form";
 import { getReleaseByTag } from "@/lib/releases";
-import MainContent from "@/components/main-content";
-import BuildForm from "@/components/build-form";
 import {
   Card,
   CardContent,
@@ -17,6 +15,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import BuilderClientComponent from "@/components/builder-client-component";
+import ProvenanceHelper from "@/components/provenance-helper";
 
 function getOS(userAgent: string): "linux" | "windows" | "macos" {
   if (/mac/i.test(userAgent)) return "macos";
@@ -80,21 +80,22 @@ export default async function Home({
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <BuildForm
+              <BuilderClientComponent
                 dictionary={dictionary}
                 tags={tags}
-                initValues={initialBuildValues}
+                initialBuildValues={initialBuildValues}
+                initialRelease={initialRelease}
+                lang={lang}
               />
             </CardContent>
           </Card>
         </div>
-
-        <MainContent
-          dictionary={dictionary}
-          tags={tags}
-          initialRelease={initialRelease}
-          initialBuildValues={initialBuildValues}
-        />
+        <div className="w-full max-w-4xl mt-8">
+          <ProvenanceHelper
+            dictionary={dictionary}
+            releaseTagName={latestTag?.name || "latest"}
+          />
+        </div>
       </div>
       <RetroGrid />
     </main>
