@@ -14,15 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import BuildForm from "./build-form";
 import ReleaseList from "./release-list";
 import NoReleaseFound from "./no-release-found";
 
@@ -56,7 +48,6 @@ export default function MainContent({
 }: MainContentProps) {
   const [selectedTag, setSelectedTag] = useState(initialBuildValues.versionTag);
   const [selectedSha, setSelectedSha] = useState(initialBuildValues.commitSha);
-  const [showBuildForm, setShowBuildForm] = useState(!initialRelease);
 
   const builderTag =
     selectedTag && selectedSha
@@ -85,7 +76,6 @@ export default function MainContent({
     if (selected) {
       setSelectedTag(selected.name);
       setSelectedSha(selected.commit.sha);
-      setShowBuildForm(false); // Reset form visibility on version change
     }
   };
 
@@ -104,29 +94,12 @@ export default function MainContent({
       return <p className="mt-8 text-center text-red-500">{error.message}</p>;
     }
     if (release) {
-      return (
-        <>
-          <ReleaseList release={release} dictionary={dictionary} />
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => setShowBuildForm(true)}
-              className="text-sm text-muted-foreground hover:text-foreground"
-            >
-              {dictionary.page.form.customBuildPrompt}
-            </button>
-          </div>
-        </>
-      );
+      return <ReleaseList release={release} dictionary={dictionary} />;
     }
 
     // If release is not found, show the prompt
     if (!release && !isLoading) {
-      return (
-        <NoReleaseFound
-          dictionary={dictionary}
-          onBuildClick={() => setShowBuildForm(true)}
-        />
-      );
+      return <NoReleaseFound dictionary={dictionary} />;
     }
 
     return null; // Should not be reached
@@ -163,30 +136,6 @@ export default function MainContent({
       </div>
 
       <div className="mt-8">{renderContent()}</div>
-
-      {showBuildForm && (
-        <div className="mt-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>{dictionary.page.form.title}</CardTitle>
-              <CardDescription>
-                {dictionary.page.form.description}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <BuildForm
-                dictionary={dictionary}
-                tags={tags}
-                initValues={{
-                  ...initialBuildValues,
-                  versionTag: selectedTag,
-                  commitSha: selectedSha,
-                }}
-              />
-            </CardContent>
-          </Card>
-        </div>
-      )}
     </div>
   );
 }

@@ -31,8 +31,6 @@
 
       "title": "自定义构建",
       "description": "在下方自定义您的构建选项。",
-      "customBuildPrompt": "没有找到您想要的？点击此处进行构建。",
-      "noReleaseFoundDescription": "该版本还没有构建好的文件，现在开始构建吗？",
       "buildButton": "开始构建",
       "submittingText": "提交中...",
       "downloadNow": "立即下载",
@@ -53,6 +51,7 @@
       "size": "大小",
       "download": "下载",
       "noAssets": "该版本暂无可下载文件",
+      "noAssetsFoundForThisVersion": "未找到此版本的任何构建产物。您可以使用上面的表单创建一个新的构建。",
       "noTagsFound": "未找到版本信息，无法显示构建选项"
     }
   }

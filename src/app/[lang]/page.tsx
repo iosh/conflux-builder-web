@@ -9,6 +9,14 @@ import { headers } from "next/headers";
 import { BuildFormValues } from "@/shared/form";
 import { getReleaseByTag } from "@/lib/releases";
 import MainContent from "@/components/main-content";
+import BuildForm from "@/components/build-form";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 function getOS(userAgent: string): "linux" | "windows" | "macos" {
   if (/mac/i.test(userAgent)) return "macos";
@@ -62,6 +70,24 @@ export default async function Home({
         <p className="mt-6 max-w-2xl text-center text-base text-neutral-600 dark:text-neutral-400">
           {dictionary.page.description}
         </p>
+
+        <div className="w-full max-w-4xl mt-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>{dictionary.page.form.title}</CardTitle>
+              <CardDescription>
+                {dictionary.page.form.description}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <BuildForm
+                dictionary={dictionary}
+                tags={tags}
+                initValues={initialBuildValues}
+              />
+            </CardContent>
+          </Card>
+        </div>
 
         <MainContent
           dictionary={dictionary}

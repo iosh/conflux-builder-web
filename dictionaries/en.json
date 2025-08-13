@@ -31,8 +31,6 @@
 
       "title": "Custom Build",
       "description": "Customize your build options below.",
-      "customBuildPrompt": "Don't see what you need? Click here to build.",
-      "noReleaseFoundDescription": "Do you want to build it now? You can customize the build options below.",
       "buildButton": "Start Build",
       "submittingText": "Submitting...",
       "downloadNow": "Download Now",
@@ -53,6 +51,7 @@
       "size": "Size",
       "download": "Download",
       "noAssets": "No assets found for this release.",
+      "noAssetsFoundForThisVersion": "No assets found for this version. You can create a new build using the form above.",
       "noTagsFound": "No versions found. Unable to display build options or releases."
     }
   }
