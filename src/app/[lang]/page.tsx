@@ -85,7 +85,6 @@ export default async function Home({
                 tags={tags}
                 initialBuildValues={initialBuildValues}
                 initialRelease={initialRelease}
-                lang={lang}
               />
             </CardContent>
           </Card>

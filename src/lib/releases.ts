@@ -1,22 +1,7 @@
 import { Octokit } from "@octokit/rest";
 import { BUILDER } from "@/shared/repo";
 import { unstable_cache as cache } from "next/cache";
-
-export type ReleaseAsset = {
-  id: number;
-  name: string;
-  downloadUrl: string;
-  size: number;
-};
-
-export type Release = {
-  id: number;
-  tagName: string;
-  name: string | null;
-  publishedAt: string | null;
-  htmlUrl: string;
-  assets: ReleaseAsset[];
-};
+import { Release } from "@/shared/actionsTypes";
 
 export const getReleaseByTag = cache(
   async (tag: string): Promise<Release | null> => {

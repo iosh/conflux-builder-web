@@ -59,7 +59,7 @@
       "command": "gh attestation verify {{BINARY_NAME}} -R iosh/conflux-builder",
       "learnMore": {
         "text": "了解更多关于",
-        "linkText": "在 GitHub 文档中验证来源证明",
+        "linkText": "GitHub 文档中验证来源证明",
         "linkHref": "https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations#verifying-an-artifact-attestation-for-binaries"
       }
     }

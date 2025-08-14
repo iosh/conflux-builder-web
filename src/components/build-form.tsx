@@ -16,6 +16,7 @@ import { buildForm, BuildFormValues, buildSchema } from "@/shared/form";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import type { BuildApiResponse, BuildStatusApiResponse } from "@/shared/api";
+import { fetchBuildStatus, postBuildRequest } from "@/lib/api";
 
 type Tags = Awaited<ReturnType<typeof getAndCacheTags>>;
 type Dictionary = Awaited<ReturnType<typeof getDictionary>>;
@@ -25,25 +26,6 @@ interface BuildFormProps {
   dictionary: Dictionary;
   tags: Tags;
   onValuesChange?: (values: BuildFormValues) => void;
-}
-
-async function postBuildRequest(
-  values: BuildFormValues
-): Promise<BuildApiResponse> {
-  const response = await fetch("/api/builds", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(values),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error || "Failed to submit build request");
-  }
-
-  return response.json();
 }
 
 export default function BuildForm({
@@ -71,16 +53,9 @@ export default function BuildForm({
     isFetching: isStatusFetching,
   } = useQuery<BuildStatusApiResponse | null, Error>({
     queryKey: ["buildStatus", buildId],
-    queryFn: async () => {
-      if (!buildId) return null;
-      const response = await fetch(`/api/builds/${buildId}/status`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch build status");
-      }
-      return response.json();
-    },
+    queryFn: () => fetchBuildStatus(buildId!),
     enabled: pollingEnabled && !!buildId,
-    refetchInterval: 5000, // Poll every 5 seconds
+    refetchInterval: 30000, // Poll every 30 seconds
   });
 
   useEffect(() => {
@@ -109,61 +84,6 @@ export default function BuildForm({
       onValuesChange(formValues);
     }
   }, [formValues, onValuesChange]);
-
-  const getBuildStatusMessage = () => {
-    const statusDict = dictionary.page.form.status;
-    if (!pollingEnabled && !statusData) return null;
-
-    if (isStatusFetching && !statusData) {
-      return <p className="mt-4 text-blue-600">{statusDict.checking}</p>;
-    }
-
-    if (statusError) {
-      return (
-        <p className="mt-4 text-red-600">
-          {statusDict.error}: {statusError.message}
-        </p>
-      );
-    }
-
-    if (statusData) {
-      switch (statusData.conclusion) {
-        case "success":
-          return <p className="mt-4 text-green-600">{statusDict.success}</p>;
-        case "failure":
-          return (
-            <p className="mt-4 text-red-600">
-              {statusDict.failed}:{" "}
-              <a
-                href={statusData.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline"
-              >
-                {statusDict.workflowRun}
-              </a>
-            </p>
-          );
-        default:
-          // Handle in-progress statuses
-          if (statusData.status === "in_progress") {
-            return (
-              <p className="mt-4 text-blue-600">{statusDict.inProgress}</p>
-            );
-          }
-          if (statusData.status === "queued") {
-            return <p className="mt-4 text-blue-600">{statusDict.queued}</p>;
-          }
-          return (
-            <p className="mt-4 text-blue-600">
-              {statusData.message || statusDict.pending}
-            </p>
-          );
-      }
-    }
-
-    return null;
-  };
 
   return (
     <form
@@ -432,25 +352,6 @@ export default function BuildForm({
                 {mutation.isPending ? "..." : dictionary.page.form.buildButton}
               </span>
             </ShimmerButton>
-            {mutation.isSuccess &&
-              !pollingEnabled &&
-              mutation.data?.downloadUrl && (
-                <div className="mt-4 text-green-600">
-                  <p>{mutation.data.message}</p>
-                  <a
-                    href={mutation.data.downloadUrl}
-                    className="text-blue-500 hover:underline"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {dictionary.page.form.downloadNow}
-                  </a>
-                </div>
-              )}
-            {mutation.isError && (
-              <p className="mt-4 text-red-600">{mutation.error.message}</p>
-            )}
-            {getBuildStatusMessage()}
           </div>
         )}
       />

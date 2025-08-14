@@ -1,22 +1,23 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { BuildFormValues } from "@/shared/form";
 import { getDictionary } from "@/get-dictionary";
 import { Locale } from "@/i18n-config";
 import { GitHubTag } from "@/lib/tags";
-import { Release } from "@/lib/releases";
 import BuildForm from "./build-form";
 import ReleaseList from "./release-list";
 import NoReleaseFound from "./no-release-found";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Release } from "@/shared/actionsTypes";
+import { useQuery } from "@tanstack/react-query";
+import { fetchReleaseByTag } from "@/lib/api";
 
 interface BuilderClientComponentProps {
   dictionary: Awaited<ReturnType<typeof getDictionary>>;
   tags: GitHubTag[];
   initialBuildValues: BuildFormValues;
   initialRelease: Release | null;
-  lang: Locale;
 }
 
 export default function BuilderClientComponent({
@@ -24,38 +25,25 @@ export default function BuilderClientComponent({
   tags,
   initialBuildValues,
   initialRelease,
-  lang,
 }: BuilderClientComponentProps) {
-  const [release, setRelease] = useState<Release | null>(initialRelease);
   const [buildValues, setBuildValues] =
     useState<BuildFormValues>(initialBuildValues);
-  const [isFetching, setIsFetching] = useState(false);
 
-  useEffect(() => {
-    const fetchRelease = async () => {
-      if (!buildValues.versionTag || !buildValues.commitSha) return;
-      setIsFetching(true);
-      try {
-        const builderTag = `${
-          buildValues.versionTag
-        }-${buildValues.commitSha.substring(0, 7)}`;
-        const response = await fetch(`/api/releases/${builderTag}`);
-        if (response.ok) {
-          const data = await response.json();
-          setRelease(data);
-        } else {
-          setRelease(null);
-        }
-      } catch (error) {
-        console.error("Failed to fetch release:", error);
-        setRelease(null);
-      } finally {
-        setIsFetching(false);
-      }
-    };
+  const builderTag = useMemo(
+    () =>
+      buildValues.versionTag && buildValues.commitSha
+        ? `${buildValues.versionTag}-${buildValues.commitSha.substring(0, 7)}`
+        : null,
+    [buildValues.versionTag, buildValues.commitSha]
+  );
 
-    fetchRelease();
-  }, [buildValues.versionTag, buildValues.commitSha]);
+  const { data: release, isFetching } = useQuery<Release>({
+    initialData: initialRelease ?? undefined,
+    queryKey: ["release", builderTag],
+    queryFn: () => fetchReleaseByTag(builderTag!),
+    enabled: !!builderTag,
+    retry: false,
+  });
 
   const renderContent = () => {
     if (isFetching) {
