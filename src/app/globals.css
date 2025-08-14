@@ -70,7 +70,21 @@
   0%, 90%, 100% {
     background-position: calc(-100% - var(--shiny-width)) 0;}
   30%, 60% {
-    background-position: calc(100% + var(--shiny-width)) 0;}}}
+    background-position: calc(100% + var(--shiny-width)) 0;}}
+  --animate-shine: shine var(--duration) infinite linear;
+  @keyframes shine {
+  0% {
+    background-position: 0% 0%;}
+  50% {
+    background-position: 100% 100%;}
+  to {
+    background-position: 0% 0%;}}
+  --animate-pulse: pulse var(--duration) ease-out infinite;
+  @keyframes pulse {
+  0%, 100% {
+    boxShadow: 0 0 0 0 var(--pulse-color);}
+  50% {
+    boxShadow: 0 0 0 8px var(--pulse-color);}}}
 
 :root {
   --radius: 0.625rem;

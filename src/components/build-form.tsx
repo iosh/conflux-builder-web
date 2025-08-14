@@ -14,9 +14,11 @@ import type { getDictionary } from "@/get-dictionary";
 import { useForm, useStore } from "@tanstack/react-form";
 import { buildForm, BuildFormValues, buildSchema } from "@/shared/form";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import type { BuildApiResponse, BuildStatusApiResponse } from "@/shared/api";
 import { fetchBuildStatus, postBuildRequest } from "@/lib/api";
+import { Release } from "@/shared/actionsTypes";
+import { isReleaseAssetMatchFormValues } from "@/lib/releaseUtils";
 
 type Tags = Awaited<ReturnType<typeof getAndCacheTags>>;
 type Dictionary = Awaited<ReturnType<typeof getDictionary>>;
@@ -26,6 +28,7 @@ interface BuildFormProps {
   dictionary: Dictionary;
   tags: Tags;
   onValuesChange?: (values: BuildFormValues) => void;
+  releaseList?: Release;
 }
 
 export default function BuildForm({
@@ -33,36 +36,29 @@ export default function BuildForm({
   dictionary,
   tags,
   onValuesChange,
+  releaseList,
 }: BuildFormProps) {
   const [buildId, setBuildId] = useState<number | null>(null);
-  const [pollingEnabled, setPollingEnabled] = useState(false);
 
   const mutation = useMutation<BuildApiResponse, Error, BuildFormValues>({
     mutationFn: postBuildRequest,
     onSuccess: (data) => {
       if (data.buildId) {
         setBuildId(data.buildId);
-        setPollingEnabled(true);
       }
     },
   });
 
-  const {
-    data: statusData,
-    error: statusError,
-    isFetching: isStatusFetching,
-  } = useQuery<BuildStatusApiResponse | null, Error>({
-    queryKey: ["buildStatus", buildId],
-    queryFn: () => fetchBuildStatus(buildId!),
-    enabled: pollingEnabled && !!buildId,
-    refetchInterval: 30000, // Poll every 30 seconds
-  });
-
-  useEffect(() => {
-    if (statusData?.conclusion) {
-      setPollingEnabled(false); // Stop polling when build is complete
-    }
-  }, [statusData]);
+  // const {
+  //   data: statusData,
+  //   error: statusError,
+  //   isFetching: isStatusFetching,
+  // } = useQuery<BuildStatusApiResponse | null, Error>({
+  //   queryKey: ["buildStatus", buildId],
+  //   queryFn: () => fetchBuildStatus(buildId!),
+  //   enabled: !!buildId,
+  //   refetchInterval: 30000, // Poll every 30 seconds
+  // });
 
   const form = useForm({
     ...buildForm,
@@ -78,6 +74,15 @@ export default function BuildForm({
   const osValue = useStore(form.store, (state) => state.values.os);
 
   const formValues = useStore(form.store, (state) => state.values);
+
+  const isReleaseIsExist = useMemo(() => {
+    if (!releaseList) {
+      return false;
+    }
+    return releaseList.assets.some((asset) =>
+      isReleaseAssetMatchFormValues(asset.name, formValues)
+    );
+  }, [releaseList, formValues]);
 
   useEffect(() => {
     if (onValuesChange) {
@@ -339,22 +344,26 @@ export default function BuildForm({
         </div>
       </div>
 
-      <form.Subscribe
-        selector={(state) => [state.canSubmit, state.isSubmitting]}
-        children={([canSubmit, isSubmitting]) => (
-          <div className="flex flex-col items-end">
-            <ShimmerButton
-              className="shadow-2xl"
-              type="submit"
-              disabled={!canSubmit || mutation.isPending}
-            >
-              <span className="whitespace-pre-wrap text-center text-sm font-medium leading-none tracking-tight text-white dark:from-white dark:to-slate-900/10 lg:text-lg">
-                {mutation.isPending ? "..." : dictionary.page.form.buildButton}
-              </span>
-            </ShimmerButton>
-          </div>
-        )}
-      />
+      {!isReleaseIsExist && (
+        <form.Subscribe
+          selector={(state) => [state.canSubmit, state.isSubmitting]}
+          children={([canSubmit, isSubmitting]) => (
+            <div className="flex flex-col items-end">
+              <ShimmerButton
+                className="shadow-2xl"
+                type="submit"
+                disabled={!canSubmit || mutation.isPending}
+              >
+                <span className="whitespace-pre-wrap text-center text-sm font-medium leading-none tracking-tight text-white dark:from-white dark:to-slate-900/10 lg:text-lg">
+                  {mutation.isPending
+                    ? "..."
+                    : dictionary.page.form.buildButton}
+                </span>
+              </ShimmerButton>
+            </div>
+          )}
+        />
+      )}
     </form>
   );
 }

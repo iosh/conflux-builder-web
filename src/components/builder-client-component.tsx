@@ -50,7 +50,7 @@ export default function BuilderClientComponent({
       return <Skeleton className="mt-8 h-64 w-full" />;
     }
     if (release) {
-      return <ReleaseList release={release} dictionary={dictionary} />;
+      return <ReleaseList release={release} buildValues={buildValues} dictionary={dictionary} />;
     }
     return <NoReleaseFound dictionary={dictionary} />;
   };
@@ -62,6 +62,7 @@ export default function BuilderClientComponent({
         tags={tags}
         initValues={buildValues}
         onValuesChange={setBuildValues}
+        releaseList={release}
       />
       <div className="mt-8">{renderContent()}</div>
     </div>
