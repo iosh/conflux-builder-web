@@ -1,7 +1,7 @@
 {
   "page": {
-    "title": "Conflux 构建器",
-    "description": "Conflux Builder 保障每个构建产物的完整性。每个文件都配有来源证明，通过密码学技术确保其来自可信的 GitHub Actions 构建流程。",
+    "title": "Conflux 构建工具",
+    "description": "Conflux 构建工具保障每个构建产物的完整性。每个文件都配有来源证明，通过密码学技术确保其在受信任的 GitHub Actions 工作流中安全编译。",
     "form": {
       "versionTag": "版本标签",
       "versionTagPlaceholder": "选择版本",
@@ -26,21 +26,20 @@
       "opensslVersion3": "OpenSSL 3.x",
       "staticOpenssl": "静态链接 OpenSSL",
       "compatibilityMode": "开启兼容模式",
-
       "title": "自定义构建",
-      "description": "在下方自定义您的构建选项。",
+      "description": "自定义构建选项。",
       "buildButton": "开始构建",
       "submittingText": "提交中...",
       "downloadNow": "立即下载",
       "status": {
-        "checking": "检查构建状态中...",
+        "checking": "正在检查构建状态...",
         "error": "状态检查出错",
-        "success": "构建完成！准备下载...",
-        "failed": "构建失败，查看日志",
-        "workflowRun": "工作流程",
+        "success": "构建成功！准备下载...",
+        "failed": "构建失败，请查看日志",
+        "workflowRun": "工作流运行",
         "inProgress": "构建进行中...",
         "queued": "构建排队中...",
-        "pending": "工作流程尚未开始"
+        "pending": "等待执行..."
       }
     },
     "assetTable": {
@@ -50,17 +49,17 @@
       "download": "下载",
       "portable": "兼容模式",
       "viewOnGitHub": "在 GitHub 上查看",
-      "noAssets": "该版本暂无可下载文件",
-      "noAssetsFoundForThisVersion": "未找到此版本的任何构建产物。您可以使用上面的表单创建一个新的构建。",
-      "noTagsFound": "未找到版本信息，无法显示构建选项"
+      "noAssets": "该版本暂无可下载文件。",
+      "noAssetsFoundForThisVersion": "此版本暂无构建产物。您可以通过上方的表单创建新构建。",
+      "noTagsFound": "未找到版本信息，无法显示构建选项和已发布版本。"
     },
     "provenanceHelper": {
-      "title": "使用来源信息进行验证",
+      "title": "使用来源证明进行验证",
       "description": "所有构建都附带一个来源证明文件。您可以使用 'gh' 命令行工具来验证您下载文件的完整性和来源。",
       "command": "gh attestation verify {{BINARY_NAME}} -R iosh/conflux-builder",
       "learnMore": {
-        "text": "在 GitHub 文档中了解更多关于",
-        "linkText": "验证来源证明的信息",
+        "text": "了解更多关于",
+        "linkText": "在 GitHub 文档中验证来源证明",
         "linkHref": "https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations#verifying-an-artifact-attestation-for-binaries"
       }
     }

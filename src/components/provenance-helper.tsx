@@ -23,7 +23,7 @@ export default function ProvenanceHelper({
     dictionary.page.provenanceHelper;
 
   const exampleCommand = command
-    .replace("{{BINARY_NAME}}", `conflux-builder-v${releaseTagName}-linux-x86_64.tar.gz`)
+    .replace("{{BINARY_NAME}}", `conflux-builder-${releaseTagName}-linux-x86_64.tar.gz`)
     .replace("{{TAG_NAME}}", releaseTagName);
 
   return (
