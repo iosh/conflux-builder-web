@@ -1,14 +1,19 @@
 import { NextResponse } from "next/server";
 import { buildSchema } from "@/shared/form";
 import { Octokit } from "@octokit/rest";
-import z from "zod";
 import { BUILDER } from "@/shared/repo";
 import { db } from "@/db";
 import { builds } from "@/db/schema";
-
+import { isReleaseAssetMatchFormValues } from "@/lib/releaseUtils";
+import { and, eq, isNull } from "drizzle-orm";
+import { getWorkflowId, getWorkflowInputs } from "@/lib/workflowUtils";
+import { getCommitShaForTag } from "@/lib/releases";
+import { nanoid } from "nanoid";
 const octokit = new Octokit({
   auth: process.env.GITHUB_TOKEN,
 });
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function POST(request: Request) {
   try {
@@ -17,15 +22,48 @@ export async function POST(request: Request) {
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: "Invalid input", details: z.treeifyError(validation.error) },
+        { error: "Invalid input", details: validation.error.flatten() },
         { status: 400 }
       );
     }
 
-    const data = validation.data;
+    const dataFromClient = validation.data;
+    const commitSha = await getCommitShaForTag(dataFromClient.versionTag);
+
+    if (!commitSha) {
+      return NextResponse.json(
+        { error: `Version tag "${dataFromClient.versionTag}" not found.` },
+        { status: 400 }
+      );
+    }
+
+    const data = { ...dataFromClient, commitSha };
+
+    const existingBuild = await db.query.builds.findFirst({
+      where: and(
+        eq(builds.commitSha, data.commitSha),
+        eq(builds.versionTag, data.versionTag),
+        eq(builds.os, data.os),
+        eq(builds.arch, data.arch),
+        data.glibcVersion
+          ? eq(builds.glibcVersion, data.glibcVersion)
+          : isNull(builds.glibcVersion),
+        data.opensslVersion
+          ? eq(builds.opensslVersion, data.opensslVersion)
+          : isNull(builds.opensslVersion)
+      ),
+    });
+
+    if (existingBuild) {
+      return NextResponse.json({
+        message: "Build record already exists.",
+        status: existingBuild.status,
+        buildId: existingBuild.id,
+        downloadUrl: existingBuild.downloadUrl,
+      });
+    }
 
     const shortSha = data.commitSha.substring(0, 7);
-
     const fullTag = `${data.versionTag}-${shortSha}`;
 
     try {
@@ -34,47 +72,22 @@ export async function POST(request: Request) {
         repo: BUILDER.repo,
         tag: fullTag,
       });
-
-      const assets = release.data.assets;
-
-      const existingAsset = assets.find((asset) => {
-        // check os
-
-        if (!asset.name.includes(data.os)) {
-          return false;
-        }
-
-        // check arch
-        if (!asset.name.includes(data.arch)) {
-          return false;
-        }
-
-        // check openssl
-
-        if (!asset.name.includes(`openssl-${data.opensslVersion}`)) {
-          return false;
-        }
-
-        // check glibc
-
-        if (
-          data.os === "linux" &&
-          !asset.name.includes(`glibc${data.glibcVersion}`)
-        ) {
-          return false;
-        }
-
-        // check compatibility mode
-        if (data.compatibilityMode && !asset.name.includes("portable")) {
-          return false;
-        }
-
-        return true;
-      });
-
+      const existingAsset = release.data.assets.find((asset) =>
+        isReleaseAssetMatchFormValues(asset.name, data)
+      );
       if (existingAsset) {
+        const [newBuild] = await db
+          .insert(builds)
+          .values({
+            ...data,
+            status: "completed",
+            downloadUrl: existingAsset.browser_download_url,
+          })
+          .returning();
         return NextResponse.json({
-          message: "Build found!",
+          message: "Build found on GitHub!",
+          status: "completed",
+          buildId: newBuild.id,
           downloadUrl: existingAsset.browser_download_url,
         });
       }
@@ -86,47 +99,70 @@ export async function POST(request: Request) {
           { status: 500 }
         );
       }
-      // A 404 error is expected if the release/tag doesn't exist, continue to next step.
     }
 
-    // If we reach here, it means no existing release/asset was found.
-    // We need to trigger a new build.
+    const [newBuild] = await db
+      .insert(builds)
+      .values({ ...data, status: "pending" })
+      .returning();
+
     try {
+      const workflow_id = getWorkflowId(data.os);
+      const appRunId = nanoid(5);
+      const inputs = getWorkflowInputs({ ...data, runId: appRunId });
+      const startTime = new Date();
+
       await octokit.actions.createWorkflowDispatch({
         owner: BUILDER.owner,
         repo: BUILDER.repo,
-        workflow_id: "main.yml",
+        workflow_id,
         ref: "main",
-        inputs: {
-          version_tag: data.versionTag,
-          commit_sha: data.commitSha,
-          os: data.os,
-          arch: data.arch,
-          static_openssl: data.staticOpenssl,
-          openssl_version: data.opensslVersion,
-          compatibility_mode: data.compatibilityMode,
-        },
+        inputs: inputs as any,
       });
 
-      // Record the build request in the database
-      const newBuilds = await db
-        .insert(builds)
-        .values({
-          ...data,
-          status: "pending",
-          createdAt: new Date(),
-        })
-        .returning({ id: builds.id });
+      // Poll for the workflow run to get its ID
+      let runId: number | null = null;
+      for (let i = 0; i < 24; i++) {
+        // Poll for 120 seconds (24 * 5s)
+        await sleep(5000);
+        const runs = await octokit.actions.listWorkflowRuns({
+          owner: BUILDER.owner,
+          repo: BUILDER.repo,
+          workflow_id,
+          created: `>${startTime.toISOString()}`,
+        });
 
-      const newBuild = newBuilds[0];
+        const run = runs.data.workflow_runs.find((r) =>
+          r.display_title.includes(appRunId)
+        );
+        if (run) {
+          runId = run.id;
+          break;
+        }
+      }
+
+      if (!runId) {
+        throw new Error(
+          "Could not find the triggered workflow run after 120 seconds."
+        );
+      }
+
+      await db
+        .update(builds)
+        .set({ status: "in_progress", githubActionRunId: runId.toString() })
+        .where(eq(builds.id, newBuild.id));
 
       return NextResponse.json({
-        message:
-          "No existing build found. A new build has been successfully triggered.",
+        message: "A new build has been successfully triggered.",
+        status: "in_progress",
         buildId: newBuild.id,
       });
     } catch (error) {
-      console.error("Failed to trigger workflow or record build:", error);
+      console.error("Failed to trigger workflow or find run ID:", error);
+      await db
+        .update(builds)
+        .set({ status: "failed" })
+        .where(eq(builds.id, newBuild.id));
       return NextResponse.json(
         { error: "Failed to trigger a new build." },
         { status: 500 }

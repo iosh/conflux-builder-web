@@ -20,6 +20,7 @@ export function getWorkflowInputs(data: workflowInputsType) {
     commit_sha: data.commitSha,
     version_tag: data.versionTag,
     arch: data.arch,
+    run_id: data.runId,
   };
   switch (data.os) {
     case "linux":
