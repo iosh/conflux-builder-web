@@ -39,26 +39,31 @@ export default function BuildForm({
   releaseList,
 }: BuildFormProps) {
   const [buildId, setBuildId] = useState<number | null>(null);
+  const [currentBuildStatus, setCurrentBuildStatus] =
+    useState<BuildStatusApiResponse | null>(null);
 
   const mutation = useMutation<BuildApiResponse, Error, BuildFormValuesType>({
     mutationFn: postBuildRequest,
     onSuccess: (data) => {
-      if (data.buildId) {
-        setBuildId(data.buildId);
-      }
+      setBuildId(data.buildId || null);
     },
   });
 
-  // const {
-  //   data: statusData,
-  //   error: statusError,
-  //   isFetching: isStatusFetching,
-  // } = useQuery<BuildStatusApiResponse | null, Error>({
-  //   queryKey: ["buildStatus", buildId],
-  //   queryFn: () => fetchBuildStatus(buildId!),
-  //   enabled: !!buildId,
-  //   refetchInterval: 30000, // Poll every 30 seconds
-  // });
+  const { data: statusData } = useQuery({
+    queryKey: ["buildStatus", buildId],
+    queryFn: () => fetchBuildStatus(buildId!),
+    enabled:
+      !!buildId &&
+      currentBuildStatus?.status !== "completed" &&
+      currentBuildStatus?.status !== "failed",
+    refetchInterval: 10000, // Poll every 10 seconds
+  });
+
+  useEffect(() => {
+    if (statusData) {
+      setCurrentBuildStatus(statusData);
+    }
+  }, [statusData]);
 
   const form = useForm({
     ...buildForm,
@@ -67,18 +72,18 @@ export default function BuildForm({
       onSubmit: buildSchema,
     },
     onSubmit: ({ value }) => {
+      // Reset state before new submission
+      setBuildId(null);
+      setCurrentBuildStatus(null);
       mutation.mutate(value);
     },
   });
 
   const osValue = useStore(form.store, (state) => state.values.os);
-
   const formValues = useStore(form.store, (state) => state.values);
 
   const isReleaseIsExist = useMemo(() => {
-    if (!releaseList) {
-      return false;
-    }
+    if (!releaseList) return false;
     return releaseList.assets.some((asset) =>
       isReleaseAssetMatchFormValues(asset.name, formValues)
     );
@@ -90,6 +95,65 @@ export default function BuildForm({
     }
   }, [formValues, onValuesChange]);
 
+  useEffect(() => {
+    setCurrentBuildStatus(null);
+    setBuildId(null);
+  }, [formValues]);
+
+  const buttonState = useMemo(() => {
+    const { buttonStates, buildButton } = dictionary.page.form;
+
+    if (mutation.isPending) {
+      return {
+        text: buttonStates.triggering,
+        disabled: true,
+      };
+    }
+    if (
+      currentBuildStatus?.status === "in_progress" ||
+      currentBuildStatus?.status === "pending"
+    ) {
+      return {
+        text: buttonStates.building,
+        disabled: true,
+      };
+    }
+    if (currentBuildStatus?.status === "completed") {
+      return {
+        text: buttonStates.download,
+        disabled: false,
+        isLink: true,
+        url: currentBuildStatus.downloadUrl ?? undefined,
+      };
+    }
+    if (currentBuildStatus?.status === "failed") {
+      return {
+        text: buttonStates.buildFailed,
+        disabled: true,
+      };
+    }
+    return { text: buildButton, disabled: false };
+  }, [mutation.isPending, currentBuildStatus, dictionary.page.form]);
+
+  const archOptions = useMemo((): BuildFormValuesType["arch"][] => {
+    if (osValue === "macos") {
+      return ["aarch64"];
+    }
+    if (osValue === "windows") {
+      return ["x86_64"];
+    }
+    return ["x86_64", "aarch64"];
+  }, [osValue]);
+
+  useEffect(() => {
+    if (osValue === "windows" && formValues.arch === "aarch64") {
+      form.setFieldValue("arch", "x86_64");
+    }
+    if (osValue === "macos" && formValues.arch === "x86_64") {
+      form.setFieldValue("arch", "aarch64");
+    }
+  }, [osValue, formValues.arch, form.setFieldValue]);
+
   return (
     <form
       onSubmit={(e) => {
@@ -99,6 +163,7 @@ export default function BuildForm({
       }}
       className="mt-8 w-full space-y-6 rounded-lg bg-white/80 p-8 backdrop-blur-sm dark:bg-black/80"
     >
+      {/* Form fields remain the same */}
       <div className="grid grid-cols-1 gap-x-6 gap-y-8 md:grid-cols-6">
         <div className="md:col-span-2">
           <form.Field
@@ -185,9 +250,11 @@ export default function BuildForm({
                 </label>
                 <Select
                   value={field.state.value}
-                  onValueChange={(value: BuildFormValuesType["arch"]) =>
-                    field.handleChange(value)
-                  }
+                  onValueChange={(value: BuildFormValuesType["arch"]) => {
+                    if (value) {
+                      field.handleChange(value);
+                    }
+                  }}
                 >
                   <SelectTrigger id="arch" className="mt-1">
                     <SelectValue
@@ -195,12 +262,11 @@ export default function BuildForm({
                     />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="x86_64">
-                      {dictionary.page.form.x86_64}
-                    </SelectItem>
-                    <SelectItem value="aarch64">
-                      {dictionary.page.form.aarch64}
-                    </SelectItem>
+                    {archOptions.map((v) => (
+                      <SelectItem value={v} key={v}>
+                        {dictionary.page.form[v]}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -221,9 +287,9 @@ export default function BuildForm({
                 </label>
                 <Select
                   value={field.state.value}
-                  onValueChange={(value: BuildFormValuesType["opensslVersion"]) =>
-                    field.handleChange(value)
-                  }
+                  onValueChange={(
+                    value: BuildFormValuesType["opensslVersion"]
+                  ) => field.handleChange(value)}
                 >
                   <SelectTrigger id="opensslVersion" className="mt-1">
                     <SelectValue
@@ -339,24 +405,22 @@ export default function BuildForm({
       </div>
 
       {!isReleaseIsExist && (
-        <form.Subscribe
-          selector={(state) => [state.canSubmit, state.isSubmitting]}
-          children={([canSubmit, isSubmitting]) => (
-            <div className="flex flex-col items-end">
-              <ShimmerButton
-                className="shadow-2xl"
-                type="submit"
-                disabled={!canSubmit || mutation.isPending}
-              >
-                <span className="whitespace-pre-wrap text-center text-sm font-medium leading-none tracking-tight text-white dark:from-white dark:to-slate-900/10 lg:text-lg">
-                  {mutation.isPending
-                    ? "..."
-                    : dictionary.page.form.buildButton}
-                </span>
-              </ShimmerButton>
-            </div>
-          )}
-        />
+        <div className="flex flex-col items-end">
+          <ShimmerButton
+            className="shadow-2xl"
+            type={buttonState.isLink ? "button" : "submit"}
+            disabled={buttonState.disabled}
+            onClick={() => {
+              if (buttonState.isLink && buttonState.url) {
+                window.open(buttonState.url, "_blank");
+              }
+            }}
+          >
+            <span className="whitespace-pre-wrap text-center text-sm font-medium leading-none tracking-tight text-white dark:from-white dark:to-slate-900/10 lg:text-lg">
+              {buttonState.text}
+            </span>
+          </ShimmerButton>
+        </div>
       )}
     </form>
   );
