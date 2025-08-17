@@ -35,10 +35,7 @@ export default async function Home({
   const userAgent = (await headers()).get("user-agent") || "";
   const latestTag = tags.find((t) => !t.name.includes("testnet"));
 
-  const initialBuilderTag =
-    latestTag?.name && latestTag?.commit.sha
-      ? `${latestTag.name}-${latestTag.commit.sha.substring(0, 7)}`
-      : "";
+  const initialBuilderTag = latestTag ? latestTag.name : "";
 
   const initialRelease = await getReleaseByTag(initialBuilderTag);
 

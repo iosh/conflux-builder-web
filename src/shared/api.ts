@@ -2,41 +2,17 @@
  * Defines the shared types for API responses.
  */
 
+import { builds } from "@/db/schema";
+
 /**
  * The response from `POST /api/builds`.
  */
 export type BuildApiResponse = {
-  message: string;
-  downloadUrl?: string;
   buildId?: number;
+  downloadUrl?: string;
+  message: string;
+  status: BuildState["status"];
 };
+export type BuildState = typeof builds.$inferSelect;
 
-/**
- * The response from `GET /api/builds/[id]/status`.
- */
-export type BuildStatusApiResponse = {
-  status:
-    | "queued"
-    | "in_progress"
-    | "completed"
-    | "action_required"
-    | "cancelled"
-    | "failure"
-    | "neutral"
-    | "skipped"
-    | "stale"
-    | "success"
-    | "timed_out"
-    | "waiting";
-  conclusion:
-    | "success"
-    | "failure"
-    | "neutral"
-    | "cancelled"
-    | "skipped"
-    | "timed_out"
-    | "action_required"
-    | null;
-  url?: string;
-  message?: string; // For pending/not found states
-};
+export type BuildStatusApiResponse = BuildState;
