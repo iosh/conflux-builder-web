@@ -1,22 +1,55 @@
 import { Octokit } from "@octokit/rest";
-import { BUILDER } from "@/shared/repo";
+import { BUILDER, CONFLUX_RUST } from "@/shared/repo";
 import { unstable_cache as cache } from "next/cache";
 import { Release } from "@/shared/actionsTypes";
 
+const octokit = new Octokit({
+  auth: process.env.GITHUB_TOKEN,
+});
+
+export const getCommitShaForTag = cache(
+  async (versionTag: string): Promise<string | null> => {
+    if (!versionTag) return null;
+    try {
+      const ref = await octokit.git.getRef({
+        owner: CONFLUX_RUST.owner,
+        repo: CONFLUX_RUST.repo,
+        ref: `tags/${versionTag}`,
+      });
+      return ref.data.object.sha;
+    } catch (error: any) {
+      if (error.status === 404) {
+        console.log(`Tag "${versionTag}" not found in ${CONFLUX_RUST.repo}.`);
+        return null;
+      }
+      console.error(`Failed to get commit SHA for tag "${versionTag}":`, error);
+      throw error;
+    }
+  },
+  ["commit-sha-for-tag"],
+  { revalidate: 600 } // Cache for 10 minutes
+);
+
 export const getReleaseByTag = cache(
-  async (tag: string): Promise<Release | null> => {
-    if (!tag) {
+  async (versionTag: string): Promise<Release | null> => {
+    if (!versionTag) {
       return null;
     }
-    try {
-      const octokit = new Octokit({
-        auth: process.env.GITHUB_TOKEN,
-      });
 
+    const commitSha = await getCommitShaForTag(versionTag);
+    if (!commitSha) {
+      // If the primary tag doesn't exist, the release can't exist either.
+      return null;
+    }
+
+    const shortSha = commitSha.substring(0, 7);
+    const fullTag = `${versionTag}-${shortSha}`;
+
+    try {
       const { data: release } = await octokit.repos.getReleaseByTag({
         owner: BUILDER.owner,
         repo: BUILDER.repo,
-        tag,
+        tag: fullTag,
       });
 
       return {
@@ -33,22 +66,16 @@ export const getReleaseByTag = cache(
         })),
       };
     } catch (error: any) {
-      // If the release is not found, GitHub API returns a 404 status.
-      // We check for this specific case and return null.
       if (error.status === 404) {
-        console.log(`Release with tag "${tag}" not found.`);
+        console.log(`Release with tag "${fullTag}" not found.`);
         return null;
       }
-      // For any other errors, we log them and re-throw to indicate a problem.
-      console.error(
-        `Failed to fetch release with tag "${tag}":`,
-        error
-      );
+      console.error(`Failed to fetch release with tag "${fullTag}":`, error);
       throw error;
     }
   },
   ["github-release-by-tag"], // Base cache key
   {
-    revalidate: 180, // Revalidate every 3 minutes
+    revalidate: 300, // Revalidate every 3 minutes
   }
 );
