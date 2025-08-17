@@ -28,14 +28,7 @@ export default function BuilderClientComponent({
 }: BuilderClientComponentProps) {
   const [buildValues, setBuildValues] =
     useState<BuildFormValuesType>(initialBuildValues);
-
-  const builderTag = useMemo(
-    () =>
-      buildValues.versionTag && buildValues.commitSha
-        ? `${buildValues.versionTag}-${buildValues.commitSha.substring(0, 7)}`
-        : null,
-    [buildValues.versionTag, buildValues.commitSha]
-  );
+  const builderTag = buildValues.versionTag;
 
   const { data: release, isFetching } = useQuery<Release>({
     initialData: initialRelease ?? undefined,
@@ -50,7 +43,13 @@ export default function BuilderClientComponent({
       return <Skeleton className="mt-8 h-64 w-full" />;
     }
     if (release) {
-      return <ReleaseList release={release} buildValues={buildValues} dictionary={dictionary} />;
+      return (
+        <ReleaseList
+          release={release}
+          buildValues={buildValues}
+          dictionary={dictionary}
+        />
+      );
     }
     return <NoReleaseFound dictionary={dictionary} />;
   };

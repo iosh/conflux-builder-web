@@ -1,64 +1,142 @@
 import { NextResponse } from "next/server";
-import { Octokit } from "@octokit/rest";
-import { BUILDER } from "@/shared/repo";
 import { db } from "@/db";
 import { builds } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { Octokit } from "@octokit/rest";
+import { BUILDER } from "@/shared/repo";
+import { isReleaseAssetMatchFormValues } from "@/lib/releaseUtils";
+import { buildSchema } from "@/shared/form";
+import { BuildStatusApiResponse } from "@/shared/api";
 
 const octokit = new Octokit({
   auth: process.env.GITHUB_TOKEN,
 });
 
+async function updateBuildWithReleaseAsset(build: typeof builds.$inferSelect) {
+  const shortSha = build.commitSha.substring(0, 7);
+  const fullTag = `${build.versionTag}-${shortSha}`;
+
+  try {
+    const release = await octokit.repos.getReleaseByTag({
+      owner: BUILDER.owner,
+      repo: BUILDER.repo,
+      tag: fullTag,
+    });
+
+    const buildParamsForMatch = buildSchema.parse({
+      ...build,
+      staticOpenssl: build.staticOpenssl ?? false,
+      compatibilityMode: build.compatibilityMode ?? false,
+      opensslVersion: build.opensslVersion ?? "3",
+    });
+
+    const asset = release.data.assets.find((a) =>
+      isReleaseAssetMatchFormValues(a.name, buildParamsForMatch)
+    );
+
+    if (asset) {
+      const [updatedBuild] = await db
+        .update(builds)
+        .set({
+          status: "completed",
+          downloadUrl: asset.browser_download_url,
+        })
+        .where(eq(builds.id, build.id))
+        .returning();
+      return updatedBuild;
+    }
+
+    console.warn(`Could not find matching asset for release ${fullTag}`);
+    const [updatedBuild] = await db
+      .update(builds)
+      .set({ status: "completed" })
+      .where(eq(builds.id, build.id))
+      .returning();
+    return updatedBuild;
+  } catch (error: any) {
+    if (error.status !== 404) {
+      console.error(`Failed to check release for tag ${fullTag}`, error);
+    }
+
+    const [failedBuild] = await db
+      .update(builds)
+      .set({ status: "failed" })
+      .where(eq(builds.id, build.id))
+      .returning();
+    return failedBuild;
+  }
+}
+
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
-) {
+): Promise<NextResponse<BuildStatusApiResponse | { error: string }>> {
   const buildId = parseInt(params.id, 10);
-
   if (isNaN(buildId)) {
     return NextResponse.json({ error: "Invalid build ID" }, { status: 400 });
   }
 
+  const build = await db.query.builds.findFirst({
+    where: eq(builds.id, buildId),
+  });
+
+  if (!build) {
+    return NextResponse.json({ error: "Build not found" }, { status: 404 });
+  }
+
+  if (build.status === "completed" || build.status === "failed") {
+    return NextResponse.json(build);
+  }
+
+  if (!build.githubActionRunId) {
+    const updatedBuild = await updateBuildWithReleaseAsset(build);
+    if (updatedBuild.status === "completed")
+      return NextResponse.json(updatedBuild);
+
+    return NextResponse.json(
+      { error: "Build is in a pending state without a workflow run ID." },
+      { status: 400 }
+    );
+  }
+
   try {
-    // 1. Find the build in our database
-    const build = await db.query.builds.findFirst({
-      where: eq(builds.id, buildId),
+    const { data: run } = await octokit.actions.getWorkflowRun({
+      owner: BUILDER.owner,
+      repo: BUILDER.repo,
+      run_id: parseInt(build.githubActionRunId, 10),
     });
 
-    if (!build) {
-      return NextResponse.json({ error: "Build not found" }, { status: 404 });
+    if (run.status === "completed") {
+      if (run.conclusion === "success") {
+        const finalBuildState = await updateBuildWithReleaseAsset(build);
+        return NextResponse.json(finalBuildState);
+      } else {
+        const [failedBuild] = await db
+          .update(builds)
+          .set({ status: "failed" })
+          .where(eq(builds.id, build.id))
+          .returning();
+        return NextResponse.json(failedBuild);
+      }
     }
 
-    // 2. Get the workflow runs for the repository
-    const { data: workflowRuns } =
-      await octokit.actions.listWorkflowRunsForRepo({
-        owner: BUILDER.owner,
-        repo: BUILDER.repo,
-        event: "workflow_dispatch",
-      });
-
-    const relevantRun = workflowRuns.workflow_runs.find(
-      (run) => run.head_sha === build.commitSha
-      // More checks might be needed here
+    return NextResponse.json(build);
+  } catch (error: any) {
+    console.error(
+      `Error fetching workflow run ${build.githubActionRunId}`,
+      error
     );
 
-    if (!relevantRun) {
-      return NextResponse.json(
-        { status: "pending", message: "Workflow run not found yet." },
-        { status: 202 }
-      );
+    if (error.status === 404) {
+      const [failedBuild] = await db
+        .update(builds)
+        .set({ status: "failed" })
+        .where(eq(builds.id, build.id))
+        .returning();
+      return NextResponse.json(failedBuild);
     }
-
-    // 4. Return the status
-    return NextResponse.json({
-      status: relevantRun.status,
-      conclusion: relevantRun.conclusion,
-      url: relevantRun.html_url,
-    });
-  } catch (error) {
-    console.error("Failed to get build status:", error);
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { error: "Failed to fetch workflow status from GitHub." },
       { status: 500 }
     );
   }
