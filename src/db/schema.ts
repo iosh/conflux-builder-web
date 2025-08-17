@@ -22,6 +22,6 @@ export const builds = sqliteTable('builds', {
   githubActionRunId: text('github_action_run_id'),
   status: text('status', { enum: ['pending', 'in_progress', 'completed', 'failed', 'cancelled'] }).default('pending'),
   downloadUrl: text('download_url'),
-  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`),
-  updatedAt: integer('updated_at', { mode: 'timestamp' }).$onUpdate(() => new Date()),
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).$onUpdate(() => new Date()).notNull(),
 });

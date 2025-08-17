@@ -31,6 +31,12 @@
       "buildButton": "开始构建",
       "submittingText": "提交中...",
       "downloadNow": "立即下载",
+      "buttonStates": {
+        "triggering": "触发中...",
+        "building": "构建中...",
+        "download": "下载",
+        "buildFailed": "构建失败"
+      },
       "status": {
         "checking": "正在检查构建状态...",
         "error": "状态检查出错",
