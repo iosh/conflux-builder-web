@@ -1,8 +1,8 @@
-import type { BuildFormValues } from "@/shared/form";
+import type { BuildFormValuesType } from "@/shared/form";
 
 export const isReleaseAssetMatchFormValues = (
   assetName: string,
-  criteria: BuildFormValues
+  criteria: BuildFormValuesType
 ): boolean => {
   const {
     versionTag,

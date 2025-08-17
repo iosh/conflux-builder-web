@@ -12,7 +12,7 @@ import { ShimmerButton } from "@/components/magicui/shimmer-button";
 import type { getAndCacheTags } from "@/lib/tags";
 import type { getDictionary } from "@/get-dictionary";
 import { useForm, useStore } from "@tanstack/react-form";
-import { buildForm, BuildFormValues, buildSchema } from "@/shared/form";
+import { buildForm, BuildFormValuesType, buildSchema } from "@/shared/form";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState, useEffect, useMemo } from "react";
 import type { BuildApiResponse, BuildStatusApiResponse } from "@/shared/api";
@@ -24,10 +24,10 @@ type Tags = Awaited<ReturnType<typeof getAndCacheTags>>;
 type Dictionary = Awaited<ReturnType<typeof getDictionary>>;
 
 interface BuildFormProps {
-  initValues: BuildFormValues;
+  initValues: BuildFormValuesType;
   dictionary: Dictionary;
   tags: Tags;
-  onValuesChange?: (values: BuildFormValues) => void;
+  onValuesChange?: (values: BuildFormValuesType) => void;
   releaseList?: Release;
 }
 
@@ -40,7 +40,7 @@ export default function BuildForm({
 }: BuildFormProps) {
   const [buildId, setBuildId] = useState<number | null>(null);
 
-  const mutation = useMutation<BuildApiResponse, Error, BuildFormValues>({
+  const mutation = useMutation<BuildApiResponse, Error, BuildFormValuesType>({
     mutationFn: postBuildRequest,
     onSuccess: (data) => {
       if (data.buildId) {
@@ -113,13 +113,7 @@ export default function BuildForm({
                 </label>
                 <Select
                   value={field.state.value}
-                  onValueChange={(value) => {
-                    const selectedTag = tags.find((t) => t.name === value);
-                    if (selectedTag) {
-                      form.setFieldValue("commitSha", selectedTag.commit.sha);
-                    }
-                    field.handleChange(value);
-                  }}
+                  onValueChange={field.handleChange}
                 >
                   <SelectTrigger id="version-tag" className="mt-1">
                     <SelectValue
@@ -152,7 +146,7 @@ export default function BuildForm({
                 </label>
                 <Select
                   value={field.state.value}
-                  onValueChange={(value: BuildFormValues["os"]) =>
+                  onValueChange={(value: BuildFormValuesType["os"]) =>
                     field.handleChange(value)
                   }
                 >
@@ -191,7 +185,7 @@ export default function BuildForm({
                 </label>
                 <Select
                   value={field.state.value}
-                  onValueChange={(value: BuildFormValues["arch"]) =>
+                  onValueChange={(value: BuildFormValuesType["arch"]) =>
                     field.handleChange(value)
                   }
                 >
@@ -227,7 +221,7 @@ export default function BuildForm({
                 </label>
                 <Select
                   value={field.state.value}
-                  onValueChange={(value: BuildFormValues["opensslVersion"]) =>
+                  onValueChange={(value: BuildFormValuesType["opensslVersion"]) =>
                     field.handleChange(value)
                   }
                 >
@@ -267,7 +261,7 @@ export default function BuildForm({
                   <Select
                     value={field.state.value}
                     onValueChange={(
-                      value: NonNullable<BuildFormValues["glibcVersion"]>
+                      value: NonNullable<BuildFormValuesType["glibcVersion"]>
                     ) => field.handleChange(value)}
                   >
                     <SelectTrigger id="glibcVersion" className="mt-1">

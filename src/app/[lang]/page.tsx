@@ -6,7 +6,7 @@ import { Locale } from "@/i18n-config";
 import { getAndCacheTags } from "@/lib/tags";
 import LocaleSwitcher from "@/components/locale-switcher";
 import { headers } from "next/headers";
-import { BuildFormValues } from "@/shared/form";
+import { BuildFormValuesType } from "@/shared/form";
 import { getReleaseByTag } from "@/lib/releases";
 import {
   Card,
@@ -42,11 +42,10 @@ export default async function Home({
 
   const initialRelease = await getReleaseByTag(initialBuilderTag);
 
-  const initialBuildValues: BuildFormValues = {
+  const initialBuildValues: BuildFormValuesType = {
     os: getOS(userAgent),
     arch: "x86_64",
     versionTag: latestTag?.name || "",
-    commitSha: latestTag?.commit.sha || "",
     glibcVersion: "2.39",
     staticOpenssl: true,
     opensslVersion: "3",

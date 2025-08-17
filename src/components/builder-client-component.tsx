@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { BuildFormValues } from "@/shared/form";
+import { BuildFormValuesType } from "@/shared/form";
 import { getDictionary } from "@/get-dictionary";
 import { Locale } from "@/i18n-config";
 import { GitHubTag } from "@/lib/tags";
@@ -16,7 +16,7 @@ import { fetchReleaseByTag } from "@/lib/api";
 interface BuilderClientComponentProps {
   dictionary: Awaited<ReturnType<typeof getDictionary>>;
   tags: GitHubTag[];
-  initialBuildValues: BuildFormValues;
+  initialBuildValues: BuildFormValuesType;
   initialRelease: Release | null;
 }
 
@@ -27,7 +27,7 @@ export default function BuilderClientComponent({
   initialRelease,
 }: BuilderClientComponentProps) {
   const [buildValues, setBuildValues] =
-    useState<BuildFormValues>(initialBuildValues);
+    useState<BuildFormValuesType>(initialBuildValues);
 
   const builderTag = useMemo(
     () =>

@@ -1,6 +1,6 @@
 import { Release } from "@/shared/actionsTypes";
 import { BuildApiResponse, BuildStatusApiResponse } from "@/shared/api";
-import { BuildFormValues } from "@/shared/form";
+import { BuildFormValuesType } from "@/shared/form";
 
 export const fetchReleaseByTag = async (
   builderTag: string
@@ -25,7 +25,7 @@ export const fetchBuildStatus = async (
   return response.json();
 };
 export const postBuildRequest = async (
-  values: BuildFormValues
+  values: BuildFormValuesType
 ): Promise<BuildApiResponse> => {
   const response = await fetch("/api/builds", {
     method: "POST",

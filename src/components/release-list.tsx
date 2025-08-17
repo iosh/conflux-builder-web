@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { Release, ReleaseAsset } from "@/shared/actionsTypes";
 import { ShineBorder } from "./magicui/shine-border";
-import { BuildFormValues } from "@/shared/form";
+import { BuildFormValuesType } from "@/shared/form";
 import { isReleaseAssetMatchFormValues } from "@/lib/releaseUtils";
 
 type Dictionary = Awaited<ReturnType<typeof getDictionary>>;
@@ -67,7 +67,7 @@ interface GroupedAsset {
 interface ReleaseListProps {
   release: Release;
   dictionary: Dictionary;
-  buildValues: BuildFormValues;
+  buildValues: BuildFormValuesType;
 }
 
 export default function ReleaseList({
