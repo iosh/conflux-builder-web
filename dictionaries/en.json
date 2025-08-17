@@ -32,6 +32,12 @@
       "buildButton": "Start Build",
       "submittingText": "Submitting...",
       "downloadNow": "Download Now",
+      "buttonStates": {
+        "triggering": "Triggering...",
+        "building": "Building...",
+        "download": "Download",
+        "buildFailed": "Build Failed"
+      },
       "status": {
         "checking": "Checking build status...",
         "error": "Error checking status",
