@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { builds } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -67,12 +67,15 @@ async function updateBuildWithReleaseAsset(build: typeof builds.$inferSelect) {
   }
 }
 
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-): Promise<NextResponse<BuildStatusApiResponse | { error: string }>> {
-  const buildId = parseInt(params.id, 10);
-  if (isNaN(buildId)) {
+export async function GET(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams;
+  const id = searchParams.get("id");
+  if (!id) {
+    return NextResponse.json({ error: "Invalid build ID" }, { status: 400 });
+  }
+
+  const buildId = parseInt(id, 10);
+  if (Number.isNaN(buildId)) {
     return NextResponse.json({ error: "Invalid build ID" }, { status: 400 });
   }
 
