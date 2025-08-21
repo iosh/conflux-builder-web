@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "generate": "bun run drizzle-kit generate",
     "migrate": "bun run migrate.ts"
   },
   "dependencies": {
