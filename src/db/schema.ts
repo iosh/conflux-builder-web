@@ -19,6 +19,7 @@ export const builds = sqliteTable('builds', {
   opensslVersion: text('openssl_version'),
   staticOpenssl: integer('static_openssl', { mode: 'boolean' }).default(true),
   compatibilityMode: integer('compatibility_mode', { mode: 'boolean' }).default(false),
+  runId: text('run_id'), // App-generated ID for matching with workflows
   githubActionRunId: text('github_action_run_id'),
   status: text('status', { enum: ['pending', 'in_progress', 'completed', 'failed', 'cancelled'] }).default('pending'),
   downloadUrl: text('download_url'),

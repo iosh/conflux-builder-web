@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "4b061f96-5d97-4fb7-99b7-fe2401f0f359",
+  "id": "3ca2e56c-6f16-41a2-aea3-59b891759c65",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "builds": {
@@ -72,6 +72,13 @@
           "autoincrement": false,
           "default": false
         },
+        "run_id": {
+          "name": "run_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "github_action_run_id": {
           "name": "github_action_run_id",
           "type": "text",
@@ -98,7 +105,7 @@
           "name": "created_at",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false,
           "default": "(strftime('%s', 'now'))"
         },
@@ -106,7 +113,7 @@
           "name": "updated_at",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         }
       },
