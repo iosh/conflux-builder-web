@@ -7,4 +7,4 @@ echo "Migrations finished successfully."
 
 echo "Starting Next.js server..."
 
-exec bun server.js
+exec HOSTNAME=0.0.0.0 PORT=3000 bun server.js
