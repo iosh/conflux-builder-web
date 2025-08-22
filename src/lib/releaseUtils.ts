@@ -2,8 +2,13 @@ import type { BuildFormValuesType } from "@/shared/form";
 
 export const isReleaseAssetMatchFormValues = (
   assetName: string,
-  criteria: BuildFormValuesType
+  criteria: BuildFormValuesType,
+  options?: {
+    // don't match the attestation file
+    skipAttestationFile: boolean;
+  }
 ): boolean => {
+  const { skipAttestationFile = true } = options || {};
   const {
     versionTag,
     os,
@@ -12,6 +17,11 @@ export const isReleaseAssetMatchFormValues = (
     compatibilityMode,
     glibcVersion,
   } = criteria;
+
+  if (skipAttestationFile && assetName.includes("attestation")) {
+    return false;
+  }
+
   if (!versionTag || !os || !arch) {
     return false;
   }

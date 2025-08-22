@@ -5,17 +5,13 @@ import { eq } from "drizzle-orm";
 import { BUILDER } from "@/shared/repo";
 import { isReleaseAssetMatchFormValues } from "@/lib/releaseUtils";
 import { buildSchema } from "@/shared/form";
-import { WEBHOOK_CONFIG } from "@/lib/webhookConfig";
 import { Webhooks } from "@octokit/webhooks";
-import { Octokit } from "@octokit/rest";
+
+
 import type { WorkflowRunEvent, ReleaseEvent } from "@octokit/webhooks-types";
 
-const octokit = new Octokit({
-  auth: process.env.GITHUB_TOKEN,
-});
-
 const webhooks = new Webhooks({
-  secret: WEBHOOK_CONFIG.secret || "",
+  secret: process.env.GITHUB_WEBHOOK_SECRET || "",
 });
 
 export async function POST(request: NextRequest) {
@@ -25,7 +21,7 @@ export async function POST(request: NextRequest) {
     const event = request.headers.get("x-github-event");
 
     // Verify webhook signature
-    if (!WEBHOOK_CONFIG.secret || !signature) {
+    if (!process.env.GITHUB_WEBHOOK_SECRET || !signature) {
       console.error("Missing webhook secret or signature");
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
     }
@@ -36,7 +32,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
     }
 
-    if (!event || !WEBHOOK_CONFIG.supportedEvents.includes(event as any)) {
+    if (!event || !["workflow_run", "release"].includes(event as any)) {
       return NextResponse.json(
         { message: "Event not supported" },
         { status: 200 }
