@@ -10,9 +10,11 @@ import { Webhooks } from "@octokit/webhooks";
 
 import type { WorkflowRunEvent, ReleaseEvent } from "@octokit/webhooks-types";
 
-const webhooks = new Webhooks({
-  secret: process.env.GITHUB_WEBHOOK_SECRET || "",
-});
+function getWebhooks() {
+  return new Webhooks({
+    secret: process.env.GITHUB_WEBHOOK_SECRET || "",
+  });
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,7 +28,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
     }
 
-    const isValid = await webhooks.verify(payload, signature);
+    const isValid = await getWebhooks().verify(payload, signature);
     if (!isValid) {
       console.error("Invalid webhook signature");
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
