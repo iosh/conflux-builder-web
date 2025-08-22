@@ -9,11 +9,10 @@ import { and, eq, isNull } from "drizzle-orm";
 import { getWorkflowId, getWorkflowInputs } from "@/lib/workflowUtils";
 import { getCommitShaForTag } from "@/lib/releases";
 import { nanoid } from "nanoid";
+
 const octokit = new Octokit({
   auth: process.env.GITHUB_TOKEN,
 });
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function POST(request: Request) {
   try {
@@ -110,8 +109,14 @@ export async function POST(request: Request) {
       const workflow_id = getWorkflowId(data.os);
       const appRunId = nanoid(5);
       const inputs = getWorkflowInputs({ ...data, runId: appRunId });
-      const startTime = new Date();
 
+      // Update build with the runId for webhook matching
+      await db
+        .update(builds)
+        .set({ runId: appRunId })
+        .where(eq(builds.id, newBuild.id));
+
+      // Trigger the GitHub Action
       await octokit.actions.createWorkflowDispatch({
         owner: BUILDER.owner,
         repo: BUILDER.repo,
@@ -120,45 +125,13 @@ export async function POST(request: Request) {
         inputs: inputs as any,
       });
 
-      // Poll for the workflow run to get its ID
-      let runId: number | null = null;
-      for (let i = 0; i < 24; i++) {
-        // Poll for 120 seconds (24 * 5s)
-        await sleep(5000);
-        const runs = await octokit.actions.listWorkflowRuns({
-          owner: BUILDER.owner,
-          repo: BUILDER.repo,
-          workflow_id,
-          created: `>${startTime.toISOString()}`,
-        });
-
-        const run = runs.data.workflow_runs.find((r) =>
-          r.display_title.includes(appRunId)
-        );
-        if (run) {
-          runId = run.id;
-          break;
-        }
-      }
-
-      if (!runId) {
-        throw new Error(
-          "Could not find the triggered workflow run after 120 seconds."
-        );
-      }
-
-      await db
-        .update(builds)
-        .set({ status: "in_progress", githubActionRunId: runId.toString() })
-        .where(eq(builds.id, newBuild.id));
-
       return NextResponse.json({
-        message: "A new build has been successfully triggered.",
-        status: "in_progress",
+        message: "Build has been queued successfully.",
+        status: "pending",
         buildId: newBuild.id,
       });
     } catch (error) {
-      console.error("Failed to trigger workflow or find run ID:", error);
+      console.error("Failed to trigger workflow:", error);
       await db
         .update(builds)
         .set({ status: "failed" })
