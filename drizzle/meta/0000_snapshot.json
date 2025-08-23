@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "3ca2e56c-6f16-41a2-aea3-59b891759c65",
+  "id": "6d83df21-7bba-4b78-bcd1-8f27aef7cb0b",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "builds": {
@@ -117,7 +117,22 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "unique_build_config": {
+          "name": "unique_build_config",
+          "columns": [
+            "commit_sha",
+            "version_tag",
+            "os",
+            "arch",
+            "glibc_version",
+            "openssl_version",
+            "static_openssl",
+            "compatibility_mode"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},

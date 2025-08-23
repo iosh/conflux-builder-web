@@ -16,6 +16,7 @@ CREATE TABLE `builds` (
 	`updated_at` integer NOT NULL
 );
 --> statement-breakpoint
+CREATE UNIQUE INDEX `unique_build_config` ON `builds` (`commit_sha`,`version_tag`,`os`,`arch`,`glibc_version`,`openssl_version`,`static_openssl`,`compatibility_mode`);--> statement-breakpoint
 CREATE TABLE `tags` (
 	`id` integer PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,
