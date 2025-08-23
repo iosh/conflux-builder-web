@@ -7,7 +7,6 @@ import { isReleaseAssetMatchFormValues } from "@/lib/releaseUtils";
 import { buildSchema } from "@/shared/form";
 import { Webhooks } from "@octokit/webhooks";
 
-
 import type { WorkflowRunEvent, ReleaseEvent } from "@octokit/webhooks-types";
 
 function getWebhooks() {
@@ -104,9 +103,17 @@ async function handleWorkflowRun(body: WorkflowRunEvent) {
       );
       await db
         .update(builds)
-        .set({ githubActionRunId: githubRunId })
+        .set({
+          githubActionRunId: githubRunId,
+          updatedAt: new Date(),
+        })
         .where(eq(builds.id, build.id));
     }
+  } else {
+    console.log(`Could not extract runId from display title: ${displayTitle}`);
+    build = await db.query.builds.findFirst({
+      where: eq(builds.githubActionRunId, githubRunId),
+    });
   }
 
   if (!build) {
@@ -133,22 +140,20 @@ async function handleWorkflowRun(body: WorkflowRunEvent) {
   }
 
   if (action === "completed") {
-    // if (workflow_run.conclusion === "success") {
-    //   console.log(
-    //     `Workflow ${githubRunId} completed successfully, checking for release assets`
-    //   );
+    if (workflow_run.conclusion === "success") {
+      console.log(
+        `Workflow ${githubRunId} completed successfully, checking for release assets`
+      );
 
-    //   await db
-    //     .update(builds)
-    //     .set({ status: "" })
-    //     .where(eq(builds.id, build.id));
+      await db
+        .update(builds)
+        .set({ status: "build_success" })
+        .where(eq(builds.id, build.id));
 
-    //   console.log(
-    //     `Build ${build.id} marked as failed (conclusion: ${workflow_run.conclusion})`
-    //   );
-    // }
-
-    if (
+      console.log(
+        `Build ${build.id} marked as successful (conclusion: ${workflow_run.conclusion})`
+      );
+    } else if (
       workflow_run.conclusion === "failure" ||
       workflow_run.conclusion === "cancelled"
     ) {

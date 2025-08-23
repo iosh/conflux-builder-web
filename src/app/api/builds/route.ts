@@ -9,6 +9,8 @@ import { and, eq, isNull } from "drizzle-orm";
 import { getWorkflowId, getWorkflowInputs } from "@/lib/workflowUtils";
 import { getCommitShaForTag } from "@/lib/releases";
 import { nanoid } from "nanoid";
+import z from "zod";
+import { getBuildQueryConditions } from "@/lib/db";
 
 const octokit = new Octokit({
   auth: process.env.GITHUB_TOKEN,
@@ -21,12 +23,13 @@ export async function POST(request: Request) {
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: "Invalid input", details: validation.error.flatten() },
+        { error: "Invalid input", details: z.treeifyError(validation.error) },
         { status: 400 }
       );
     }
 
     const dataFromClient = validation.data;
+
     const commitSha = await getCommitShaForTag(dataFromClient.versionTag);
 
     if (!commitSha) {
@@ -38,25 +41,33 @@ export async function POST(request: Request) {
 
     const data = { ...dataFromClient, commitSha };
 
+    // First, check for existing builds using conditional fields based on OS
+    const buildQueryConditions = getBuildQueryConditions(data);
+
     const existingBuild = await db.query.builds.findFirst({
-      where: and(
-        eq(builds.commitSha, data.commitSha),
-        eq(builds.versionTag, data.versionTag),
-        eq(builds.os, data.os),
-        eq(builds.arch, data.arch),
-        data.glibcVersion
-          ? eq(builds.glibcVersion, data.glibcVersion)
-          : isNull(builds.glibcVersion),
-        data.opensslVersion
-          ? eq(builds.opensslVersion, data.opensslVersion)
-          : isNull(builds.opensslVersion)
-      ),
+      where: and(...buildQueryConditions),
     });
 
     if (existingBuild) {
       if (existingBuild.status === "completed") {
         return NextResponse.json({
           message: "Build record already exists.",
+          status: existingBuild.status,
+          buildId: existingBuild.id,
+          downloadUrl: existingBuild.downloadUrl,
+        });
+      }
+
+      // Prevent duplicate builds for pending/in_progress status
+      if (
+        existingBuild.status === "pending" ||
+        existingBuild.status === "in_progress"
+      ) {
+        console.log(
+          `Build ${existingBuild.id} is already ${existingBuild.status}, preventing duplicate`
+        );
+        return NextResponse.json({
+          message: "Build is already in progress.",
           status: existingBuild.status,
           buildId: existingBuild.id,
           downloadUrl: existingBuild.downloadUrl,
@@ -73,6 +84,11 @@ export async function POST(request: Request) {
 
         const appRunId = nanoid(5);
 
+        console.log(
+          `Retrying build ${existingBuild.id} with new runId: ${appRunId}`
+        );
+
+        // Update the existing build for retry
         await db
           .update(builds)
           .set({
@@ -102,7 +118,6 @@ export async function POST(request: Request) {
             status: "pending",
             buildId: existingBuild.id,
           });
-
         } catch (error) {
           console.error("Failed to retry workflow:", error);
           await db
@@ -115,14 +130,6 @@ export async function POST(request: Request) {
           );
         }
       }
-
-      // if build is in progress, return current status
-      return NextResponse.json({
-        message: "Build is already in progress.",
-        status: existingBuild.status,
-        buildId: existingBuild.id,
-        downloadUrl: existingBuild.downloadUrl,
-      });
     }
 
     const shortSha = data.commitSha.substring(0, 7);
@@ -163,10 +170,40 @@ export async function POST(request: Request) {
       }
     }
 
-    const [newBuild] = await db
-      .insert(builds)
-      .values({ ...data, status: "pending" })
-      .returning();
+    // Try to create a new build record with the unique constraint protection
+    let newBuild;
+    try {
+      [newBuild] = await db
+        .insert(builds)
+        .values({ ...data, status: "pending" })
+        .returning();
+    } catch (error: any) {
+      // Handle unique constraint violation (duplicate build)
+      if (error.message && error.message.includes("UNIQUE constraint failed")) {
+        console.log("Duplicate build detected, checking existing build");
+
+        const duplicateQueryConditions = getBuildQueryConditions(data);
+
+        const duplicateBuild = await db.query.builds.findFirst({
+          where: and(...duplicateQueryConditions),
+        });
+
+        if (duplicateBuild) {
+          return NextResponse.json({
+            message: "Build is already in progress or completed.",
+            status: duplicateBuild.status,
+            buildId: duplicateBuild.id,
+            downloadUrl: duplicateBuild.downloadUrl,
+          });
+        }
+      }
+
+      console.error("Failed to create build record:", error);
+      return NextResponse.json(
+        { error: "Failed to create build record." },
+        { status: 500 }
+      );
+    }
 
     try {
       const workflow_id = getWorkflowId(data.os);
@@ -176,8 +213,13 @@ export async function POST(request: Request) {
       // Update build with the runId for webhook matching
       await db
         .update(builds)
-        .set({ runId: appRunId })
+        .set({
+          runId: appRunId,
+          updatedAt: new Date(),
+        })
         .where(eq(builds.id, newBuild.id));
+
+      console.log(`Created build ${newBuild.id} with runId: ${appRunId}`);
 
       // Trigger the GitHub Action
       await octokit.actions.createWorkflowDispatch({
@@ -185,7 +227,7 @@ export async function POST(request: Request) {
         repo: BUILDER.repo,
         workflow_id,
         ref: "main",
-        inputs: inputs as any,
+        inputs: inputs,
       });
 
       return NextResponse.json({

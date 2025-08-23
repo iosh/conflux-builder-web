@@ -42,7 +42,11 @@ export default function BuildForm({
   const [currentBuildStatus, setCurrentBuildStatus] =
     useState<BuildStatusApiResponse | null>(null);
 
-  const mutation = useMutation<BuildApiResponse, Error, BuildFormValuesType>({
+  const { mutate, isPending: isSubmitting } = useMutation<
+    BuildApiResponse,
+    Error,
+    BuildFormValuesType
+  >({
     mutationFn: postBuildRequest,
     onSuccess: (data) => {
       setBuildId(data.buildId || null);
@@ -75,10 +79,16 @@ export default function BuildForm({
       onSubmit: buildSchema,
     },
     onSubmit: ({ value }) => {
+      // Prevent multiple submissions
+      if (isSubmitting) {
+        console.log("Submission already in progress, ignoring");
+        return;
+      }
+
       // Reset state before new submission
       setBuildId(null);
       setCurrentBuildStatus(null);
-      mutation.mutate(value);
+      mutate(value);
     },
   });
 
@@ -106,7 +116,7 @@ export default function BuildForm({
   const buttonState = useMemo(() => {
     const { buttonStates, buildButton } = dictionary.page.form;
 
-    if (mutation.isPending) {
+    if (isSubmitting) {
       return {
         text: buttonStates.triggering,
         disabled: true,
@@ -137,7 +147,7 @@ export default function BuildForm({
       };
     }
     return { text: buildButton, disabled: false };
-  }, [mutation.isPending, currentBuildStatus, dictionary.page.form]);
+  }, [isSubmitting, currentBuildStatus, dictionary.page.form]);
 
   const archOptions = useMemo((): BuildFormValuesType["arch"][] => {
     if (osValue === "macos") {
@@ -155,6 +165,14 @@ export default function BuildForm({
     }
     if (osValue === "macos" && formValues.arch === "x86_64") {
       form.setFieldValue("arch", "aarch64");
+    }
+    // Clear OS-specific fields when switching OS
+    if (osValue === "macos" || osValue === "windows") {
+      form.setFieldValue("opensslVersion", undefined);
+      form.setFieldValue("glibcVersion", undefined);
+      if (osValue === "macos") {
+        form.setFieldValue("compatibilityMode", false);
+      }
     }
   }, [osValue, formValues.arch, form.setFieldValue]);
 
@@ -292,9 +310,11 @@ export default function BuildForm({
                   </label>
                   <Select
                     value={field.state.value}
-                    onValueChange={(
-                      value: BuildFormValuesType["opensslVersion"]
-                    ) => field.handleChange(value)}
+                    onValueChange={(value) =>
+                      field.handleChange(
+                        value as BuildFormValuesType["opensslVersion"]
+                      )
+                    }
                   >
                     <SelectTrigger id="opensslVersion" className="mt-1">
                       <SelectValue
