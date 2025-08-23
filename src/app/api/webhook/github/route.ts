@@ -235,6 +235,7 @@ async function handleRelease(body: ReleaseEvent) {
         staticOpenssl: build.staticOpenssl ?? false,
         compatibilityMode: build.compatibilityMode ?? false,
         opensslVersion: build.opensslVersion ?? "3",
+        glibcVersion: build.glibcVersion ?? "2.39",
       });
 
       const matchingAsset = release.assets.find((asset) =>
