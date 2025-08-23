@@ -20,7 +20,7 @@ export async function getAndCacheTags() {
     const { data: remoteTags } = await octokit.repos.listTags({
       owner: CONFLUX_RUST_OWNER,
       repo: CONFLUX_RUST_REPO,
-      per_page: 10,
+      per_page: 5,
       page: 1,
     });
 
