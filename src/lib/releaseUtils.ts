@@ -27,7 +27,7 @@ export const isReleaseAssetMatchFormValues = (
   }
   if (
     !assetName.includes(versionTag) ||
-    !assetName.includes(os) ||
+    !assetName.includes(os === "macos" ? "darwin" : os) ||
     !assetName.includes(arch)
   ) {
     return false;

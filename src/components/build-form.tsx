@@ -141,7 +141,7 @@ export default function BuildForm({
     }
     if (currentBuildStatus?.status === "failed") {
       return {
-        text: buttonStates.retry, // 重试文本
+        text: buttonStates.retry,
         disabled: false,
         isRetry: true,
       };

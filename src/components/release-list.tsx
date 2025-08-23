@@ -50,7 +50,7 @@ function parseAssetName(name: string): AssetInfo {
   const parts = name.split("-");
   if (parts.includes("linux")) info.os = "Linux";
   if (parts.includes("windows")) info.os = "Windows";
-  if (parts.includes("macos")) info.os = "macOS";
+  if (parts.includes("darwin")) info.os = "macOS";
   if (parts.includes("aarch64")) info.arch = "aarch64";
   if (parts.includes("x86_64")) info.arch = "x86_64";
   if (parts.includes("portable")) info.isPortable = true;
