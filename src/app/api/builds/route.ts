@@ -54,8 +54,71 @@ export async function POST(request: Request) {
     });
 
     if (existingBuild) {
+      if (existingBuild.status === "completed") {
+        return NextResponse.json({
+          message: "Build record already exists.",
+          status: existingBuild.status,
+          buildId: existingBuild.id,
+          downloadUrl: existingBuild.downloadUrl,
+        });
+      }
+
+      if (
+        existingBuild.status === "failed" ||
+        existingBuild.status === "cancelled"
+      ) {
+        console.log(
+          `Retrying ${existingBuild.status} build ${existingBuild.id}`
+        );
+
+        const appRunId = nanoid(5);
+
+        await db
+          .update(builds)
+          .set({
+            status: "pending",
+            runId: appRunId,
+            githubActionRunId: null,
+            downloadUrl: null,
+            updatedAt: new Date(),
+          })
+          .where(eq(builds.id, existingBuild.id));
+
+        try {
+          const workflow_id = getWorkflowId(data.os);
+          const inputs = getWorkflowInputs({ ...data, runId: appRunId });
+
+          // dispatch the workflow
+          await octokit.actions.createWorkflowDispatch({
+            owner: BUILDER.owner,
+            repo: BUILDER.repo,
+            workflow_id,
+            ref: "main",
+            inputs: inputs,
+          });
+
+          return NextResponse.json({
+            message: "Build has been retried successfully.",
+            status: "pending",
+            buildId: existingBuild.id,
+          });
+
+        } catch (error) {
+          console.error("Failed to retry workflow:", error);
+          await db
+            .update(builds)
+            .set({ status: "failed" })
+            .where(eq(builds.id, existingBuild.id));
+          return NextResponse.json(
+            { error: "Failed to retry the build." },
+            { status: 500 }
+          );
+        }
+      }
+
+      // if build is in progress, return current status
       return NextResponse.json({
-        message: "Build record already exists.",
+        message: "Build is already in progress.",
         status: existingBuild.status,
         buildId: existingBuild.id,
         downloadUrl: existingBuild.downloadUrl,

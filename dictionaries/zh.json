@@ -35,7 +35,7 @@
         "triggering": "触发中...",
         "building": "构建中...",
         "download": "下载",
-        "buildFailed": "构建失败"
+        "retry": "重试构建"
       },
       "status": {
         "checking": "正在检查构建状态...",

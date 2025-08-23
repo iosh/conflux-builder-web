@@ -36,7 +36,7 @@
         "triggering": "Triggering...",
         "building": "Building...",
         "download": "Download",
-        "buildFailed": "Build Failed"
+        "retry": "Retry Build"
       },
       "status": {
         "checking": "Checking build status...",

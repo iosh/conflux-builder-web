@@ -57,6 +57,9 @@ export default function BuildForm({
       currentBuildStatus?.status !== "completed" &&
       currentBuildStatus?.status !== "failed",
     refetchInterval: 10000, // Poll every 10 seconds
+    retry: (failureCount, error) => {
+      return failureCount < 3;
+    },
   });
 
   useEffect(() => {
@@ -128,8 +131,9 @@ export default function BuildForm({
     }
     if (currentBuildStatus?.status === "failed") {
       return {
-        text: buttonStates.buildFailed,
-        disabled: true,
+        text: buttonStates.retry, // 重试文本
+        disabled: false,
+        isRetry: true,
       };
     }
     return { text: buildButton, disabled: false };
@@ -417,6 +421,10 @@ export default function BuildForm({
             onClick={() => {
               if (buttonState.isLink && buttonState.url) {
                 window.open(buttonState.url, "_blank");
+              } else if (buttonState.isRetry) {
+                setBuildId(null);
+                setCurrentBuildStatus(null);
+                form.handleSubmit();
               }
             }}
           >
