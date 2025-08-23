@@ -88,9 +88,6 @@ export async function GET(
   }
 
   if (!shouldCheckGitHubAPI(build)) {
-    console.log(
-      `Build ${build.id}: No GitHub API check needed, returning cached status`
-    );
     return NextResponse.json(build);
   }
 
