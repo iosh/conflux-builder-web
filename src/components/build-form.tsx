@@ -274,43 +274,45 @@ export default function BuildForm({
           />
         </div>
 
-        <div className="md:col-span-3">
-          <form.Field
-            name="opensslVersion"
-            children={(field) => (
-              <div>
-                <label
-                  htmlFor="opensslVersion"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  {dictionary.page.form.opensslVersion}
-                </label>
-                <Select
-                  value={field.state.value}
-                  onValueChange={(
-                    value: BuildFormValuesType["opensslVersion"]
-                  ) => field.handleChange(value)}
-                >
-                  <SelectTrigger id="opensslVersion" className="mt-1">
-                    <SelectValue
-                      placeholder={
-                        dictionary.page.form.opensslVersionPlaceholder
-                      }
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">
-                      {dictionary.page.form.opensslVersion1}
-                    </SelectItem>
-                    <SelectItem value="3">
-                      {dictionary.page.form.opensslVersion3}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          />
-        </div>
+        {osValue === "linux" && (
+          <div className="md:col-span-3">
+            <form.Field
+              name="opensslVersion"
+              children={(field) => (
+                <div>
+                  <label
+                    htmlFor="opensslVersion"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    {dictionary.page.form.opensslVersion}
+                  </label>
+                  <Select
+                    value={field.state.value}
+                    onValueChange={(
+                      value: BuildFormValuesType["opensslVersion"]
+                    ) => field.handleChange(value)}
+                  >
+                    <SelectTrigger id="opensslVersion" className="mt-1">
+                      <SelectValue
+                        placeholder={
+                          dictionary.page.form.opensslVersionPlaceholder
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">
+                        {dictionary.page.form.opensslVersion1}
+                      </SelectItem>
+                      <SelectItem value="3">
+                        {dictionary.page.form.opensslVersion3}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            />
+          </div>
+        )}
 
         {osValue === "linux" && (
           <div className="md:col-span-3">
@@ -380,26 +382,28 @@ export default function BuildForm({
                 </div>
               )}
             />
-            <form.Field
-              name="compatibilityMode"
-              children={(field) => (
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="compatibility-mode"
-                    checked={field.state.value}
-                    onCheckedChange={(checked) =>
-                      field.handleChange(Boolean(checked))
-                    }
-                  />
-                  <label
-                    htmlFor="compatibility-mode"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    {dictionary.page.form.compatibilityMode}
-                  </label>
-                </div>
-              )}
-            />
+            {osValue !== "macos" && (
+              <form.Field
+                name="compatibilityMode"
+                children={(field) => (
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="compatibility-mode"
+                      checked={field.state.value}
+                      onCheckedChange={(checked) =>
+                        field.handleChange(Boolean(checked))
+                      }
+                    />
+                    <label
+                      htmlFor="compatibility-mode"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      {dictionary.page.form.compatibilityMode}
+                    </label>
+                  </div>
+                )}
+              />
+            )}
           </div>
         </div>
       </div>
