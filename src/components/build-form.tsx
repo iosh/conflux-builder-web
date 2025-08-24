@@ -174,7 +174,21 @@ export default function BuildForm({
         form.setFieldValue("compatibilityMode", false);
       }
     }
-  }, [osValue, formValues.arch, form.setFieldValue]);
+    if (osValue === "linux") {
+      if (!formValues.opensslVersion) {
+        form.setFieldValue("opensslVersion", "3");
+      }
+      if (!formValues.glibcVersion) {
+        form.setFieldValue("glibcVersion", "2.39");
+      }
+    }
+  }, [
+    osValue,
+    formValues.arch,
+    form.setFieldValue,
+    formValues.opensslVersion,
+    formValues.glibcVersion,
+  ]);
 
   return (
     <form
@@ -386,26 +400,28 @@ export default function BuildForm({
 
         <div className="md:col-span-6">
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <form.Field
-              name="staticOpenssl"
-              children={(field) => (
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="static-openssl"
-                    checked={field.state.value}
-                    onCheckedChange={(checked) =>
-                      field.handleChange(Boolean(checked))
-                    }
-                  />
-                  <label
-                    htmlFor="static-openssl"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    {dictionary.page.form.staticOpenssl}
-                  </label>
-                </div>
-              )}
-            />
+            {osValue !== "macos" && (
+              <form.Field
+                name="staticOpenssl"
+                children={(field) => (
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="static-openssl"
+                      checked={field.state.value}
+                      onCheckedChange={(checked) =>
+                        field.handleChange(Boolean(checked))
+                      }
+                    />
+                    <label
+                      htmlFor="static-openssl"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      {dictionary.page.form.staticOpenssl}
+                    </label>
+                  </div>
+                )}
+              />
+            )}
             {osValue !== "macos" && (
               <form.Field
                 name="compatibilityMode"
