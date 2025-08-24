@@ -30,7 +30,7 @@ export default function BuilderClientComponent({
     useState<BuildFormValuesType>(initialBuildValues);
   const builderTag = buildValues.versionTag;
 
-  const { data: release, isFetching } = useQuery<GithubRelease>({
+  const { data: release, isPending } = useQuery<GithubRelease>({
     initialData: initialRelease ?? undefined,
     queryKey: ["release", builderTag],
     queryFn: () => fetchReleaseByTag(builderTag!),
@@ -39,7 +39,7 @@ export default function BuilderClientComponent({
   });
 
   const renderContent = () => {
-    if (isFetching) {
+    if (isPending) {
       return <Skeleton className="mt-8 h-64 w-full" />;
     }
     if (release) {
