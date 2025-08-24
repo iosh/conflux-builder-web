@@ -52,3 +52,33 @@ export const isReleaseAssetMatchFormValues = (
   }
   return true;
 };
+
+export function formatBytes(bytes: number, decimals = 2) {
+  if (bytes === 0) return "0 Bytes";
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
+}
+
+export interface AssetInfo {
+  os?: string;
+  arch?: string;
+  isPortable: boolean;
+}
+
+export function parseAssetName(name: string): AssetInfo {
+  const info: AssetInfo = {
+    isPortable: false,
+  };
+
+  if (name.includes("linux")) info.os = "Linux";
+  if (name.includes("windows")) info.os = "Windows";
+  if (name.includes("darwin")) info.os = "macOS";
+
+  if (name.includes("aarch64")) info.arch = "aarch64";
+  if (name.includes("x86_64")) info.arch = "x86_64";
+  if (name.includes("portable")) info.isPortable = true;
+  return info;
+}

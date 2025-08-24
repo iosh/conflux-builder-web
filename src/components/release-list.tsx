@@ -24,38 +24,14 @@ import {
 import { GithubRelease, GithubReleaseAsset } from "@/shared/actionsTypes";
 import { ShineBorder } from "./magicui/shine-border";
 import { BuildFormValuesType } from "@/shared/form";
-import { isReleaseAssetMatchFormValues } from "@/lib/releaseUtils";
+import {
+  isReleaseAssetMatchFormValues,
+  formatBytes,
+  parseAssetName,
+  AssetInfo,
+} from "@/lib/releaseUtils";
 
 type Dictionary = Awaited<ReturnType<typeof getDictionary>>;
-
-function formatBytes(bytes: number, decimals = 2) {
-  if (bytes === 0) return "0 Bytes";
-  const k = 1024;
-  const dm = decimals < 0 ? 0 : decimals;
-  const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
-}
-
-interface AssetInfo {
-  os?: string;
-  arch?: string;
-  isPortable: boolean;
-}
-
-function parseAssetName(name: string): AssetInfo {
-  const info: AssetInfo = {
-    isPortable: false,
-  };
-  const parts = name.split("-");
-  if (parts.includes("linux")) info.os = "Linux";
-  if (parts.includes("windows")) info.os = "Windows";
-  if (parts.includes("darwin")) info.os = "macOS";
-  if (parts.includes("aarch64")) info.arch = "aarch64";
-  if (parts.includes("x86_64")) info.arch = "x86_64";
-  if (parts.includes("portable")) info.isPortable = true;
-  return info;
-}
 
 interface GroupedAsset {
   key: string;

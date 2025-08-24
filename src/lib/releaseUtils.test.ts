@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { isReleaseAssetMatchFormValues } from "./releaseUtils";
+import {
+  formatBytes,
+  isReleaseAssetMatchFormValues,
+  parseAssetName,
+} from "./releaseUtils";
 import type { BuildFormValuesType } from "@/shared/form";
 
 describe("isReleaseAssetMatchFormValues", () => {
@@ -85,5 +89,34 @@ describe("isReleaseAssetMatchFormValues", () => {
       glibcVersion: "",
     } as unknown as BuildFormValuesType;
     expect(isReleaseAssetMatchFormValues(assetName, criteria)).toBe(false);
+  });
+});
+
+describe("formatBytes", () => {
+  it("should format bytes to human-readable string", () => {
+    expect(formatBytes(0)).toBe("0 Bytes");
+    expect(formatBytes(1024)).toBe("1 KB");
+    expect(formatBytes(1234)).toBe("1.21 KB");
+    expect(formatBytes(1234567)).toBe("1.18 MB");
+
+    expect(formatBytes(1234000000)).toBe("1.15 GB");
+  });
+});
+
+describe("parseAssetName", () => {
+  it("should parse os and arch", () => {
+    const assetName = "conflux-v3.0.1-testnet-fix-windows-x86_64.zip";
+    const result = parseAssetName(assetName);
+    expect(result.os).toEqual("Windows");
+    expect(result.arch).toEqual("x86_64");
+    expect(result.isPortable).toEqual(false);
+  });
+
+  it("should parse os and portable", () => {
+    const assetName = "conflux-v3.0.1-testnet-fix-windows-x86_64-portable.zip";
+    const result = parseAssetName(assetName);
+    expect(result.os).toEqual("Windows");
+    expect(result.arch).toEqual("x86_64");
+    expect(result.isPortable).toEqual(true);
   });
 });
