@@ -1,10 +1,10 @@
-import { Release } from "@/shared/actionsTypes";
+import { GithubRelease } from "@/shared/actionsTypes";
 import { BuildApiResponse, BuildStatusApiResponse } from "@/shared/api";
 import { BuildFormValuesType } from "@/shared/form";
 
 export const fetchReleaseByTag = async (
   builderTag: string
-): Promise<Release> => {
+): Promise<GithubRelease> => {
   const response = await fetch(`/api/releases/${builderTag}`);
   if (!response.ok) {
     if (response.status === 404) {

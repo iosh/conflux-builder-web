@@ -6,4 +6,6 @@ export type workflowInputsType = BuildFormValuesType & {
   runId?: string; // This run id will add to workflow name.
 };
 
-export type BuildTableType = typeof builds.$inferSelect;
+export type BuildTableInsertType = typeof builds.$inferInsert;
+
+export type BuildRecordTYpe = typeof builds.$inferSelect;

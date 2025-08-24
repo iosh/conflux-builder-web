@@ -17,7 +17,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState, useEffect, useMemo } from "react";
 import type { BuildApiResponse, BuildStatusApiResponse } from "@/shared/api";
 import { fetchBuildStatus, postBuildRequest } from "@/lib/api";
-import { Release } from "@/shared/actionsTypes";
+import { GithubRelease } from "@/shared/actionsTypes";
 import { isReleaseAssetMatchFormValues } from "@/lib/releaseUtils";
 
 type Tags = Awaited<ReturnType<typeof getAndCacheTags>>;
@@ -28,7 +28,7 @@ interface BuildFormProps {
   dictionary: Dictionary;
   tags: Tags;
   onValuesChange?: (values: BuildFormValuesType) => void;
-  releaseList?: Release;
+  releaseList?: GithubRelease;
 }
 
 export default function BuildForm({

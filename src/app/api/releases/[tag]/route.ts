@@ -1,5 +1,5 @@
+import { getReleaseByTag } from "@/services/githubService";
 import { NextResponse } from "next/server";
-import { getReleaseByTag } from "@/lib/releases";
 
 interface Params {
   tag: string;

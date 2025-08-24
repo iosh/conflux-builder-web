@@ -9,7 +9,7 @@ import BuildForm from "./build-form";
 import ReleaseList from "./release-list";
 import NoReleaseFound from "./no-release-found";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Release } from "@/shared/actionsTypes";
+import { GithubRelease } from "@/shared/actionsTypes";
 import { useQuery } from "@tanstack/react-query";
 import { fetchReleaseByTag } from "@/lib/api";
 
@@ -17,7 +17,7 @@ interface BuilderClientComponentProps {
   dictionary: Awaited<ReturnType<typeof getDictionary>>;
   tags: GitHubTag[];
   initialBuildValues: BuildFormValuesType;
-  initialRelease: Release | null;
+  initialRelease: GithubRelease | null;
 }
 
 export default function BuilderClientComponent({
@@ -30,7 +30,7 @@ export default function BuilderClientComponent({
     useState<BuildFormValuesType>(initialBuildValues);
   const builderTag = buildValues.versionTag;
 
-  const { data: release, isFetching } = useQuery<Release>({
+  const { data: release, isFetching } = useQuery<GithubRelease>({
     initialData: initialRelease ?? undefined,
     queryKey: ["release", builderTag],
     queryFn: () => fetchReleaseByTag(builderTag!),

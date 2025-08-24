@@ -5,9 +5,9 @@ import { eq } from "drizzle-orm";
 import { Octokit } from "@octokit/rest";
 import { BUILDER } from "@/shared/repo";
 import { unstable_cache } from "next/cache";
-import { BuildTableType } from "@/shared/types";
+import { BuildRecordTYpe } from "@/shared/types";
 
-type BuildStatus = BuildTableType["status"];
+type BuildStatus = BuildRecordTYpe["status"];
 
 const octokit = new Octokit({
   auth: process.env.GITHUB_TOKEN,
@@ -50,7 +50,7 @@ const getCachedWorkflowRun = unstable_cache(
   }
 );
 
-function shouldCheckGitHubAPI(build: BuildTableType): boolean {
+function shouldCheckGitHubAPI(build: BuildRecordTYpe): boolean {
   const now = new Date();
   const buildCreatedAt = build.createdAt;
 

@@ -7,7 +7,6 @@ import { getAndCacheTags } from "@/lib/tags";
 import LocaleSwitcher from "@/components/locale-switcher";
 import { headers } from "next/headers";
 import { BuildFormValuesType } from "@/shared/form";
-import { getReleaseByTag } from "@/lib/releases";
 import {
   Card,
   CardContent,
@@ -17,6 +16,7 @@ import {
 } from "@/components/ui/card";
 import BuilderClientComponent from "@/components/builder-client-component";
 import ProvenanceHelper from "@/components/provenance-helper";
+import { getReleaseByTag } from "@/services/githubService";
 
 function getOS(userAgent: string): "linux" | "windows" | "macos" {
   if (/mac/i.test(userAgent)) return "macos";

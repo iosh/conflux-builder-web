@@ -21,7 +21,7 @@ import {
   Wrench,
   Github,
 } from "lucide-react";
-import { Release, ReleaseAsset } from "@/shared/actionsTypes";
+import { GithubRelease, GithubReleaseAsset } from "@/shared/actionsTypes";
 import { ShineBorder } from "./magicui/shine-border";
 import { BuildFormValuesType } from "@/shared/form";
 import { isReleaseAssetMatchFormValues } from "@/lib/releaseUtils";
@@ -59,13 +59,13 @@ function parseAssetName(name: string): AssetInfo {
 
 interface GroupedAsset {
   key: string;
-  artifact: ReleaseAsset;
-  attestation: ReleaseAsset | null;
+  artifact: GithubReleaseAsset;
+  attestation: GithubReleaseAsset | null;
   info: AssetInfo;
 }
 
 interface ReleaseListProps {
-  release: Release;
+  release: GithubRelease;
   dictionary: Dictionary;
   buildValues: BuildFormValuesType;
 }
@@ -111,12 +111,12 @@ export default function ReleaseList({
           <h3 className="text-lg font-semibold">{release.name}</h3>
           <p className="text-sm text-muted-foreground">
             {assetTable.version}:{" "}
-            <Badge variant="outline">{release.tagName}</Badge>
+            <Badge variant="outline">{release.tag_name}</Badge>
           </p>
         </div>
         <Button variant="outline" asChild>
           <a
-            href={release.htmlUrl}
+            href={release.html_url}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2"
@@ -186,7 +186,7 @@ export default function ReleaseList({
                       className="gap-2"
                     >
                       <a
-                        href={group.attestation.downloadUrl}
+                        href={group.attestation.browser_download_url}
                         target="_blank"
                         rel="noopener noreferrer"
                       >
@@ -203,7 +203,7 @@ export default function ReleaseList({
                     variant={isNameMatch ? "default" : "secondary"}
                   >
                     <a
-                      href={group.artifact.downloadUrl}
+                      href={group.artifact.browser_download_url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-2"

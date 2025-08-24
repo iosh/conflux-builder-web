@@ -1,15 +1,6 @@
-export type ReleaseAsset = {
-  id: number;
-  name: string;
-  downloadUrl: string;
-  size: number;
-};
+import { RestEndpointMethodTypes } from "@octokit/rest";
 
-export type Release = {
-  id: number;
-  tagName: string;
-  name: string | null;
-  publishedAt: string | null;
-  htmlUrl: string;
-  assets: ReleaseAsset[];
-};
+export type GithubReleaseAsset = GithubRelease['assets'][number];
+
+export type GithubRelease =
+  RestEndpointMethodTypes["repos"]["getReleaseByTag"]["response"]['data'];

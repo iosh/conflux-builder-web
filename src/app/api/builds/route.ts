@@ -1,21 +1,11 @@
 import { NextResponse } from "next/server";
 import { buildSchema } from "@/shared/form";
-import { Octokit } from "@octokit/rest";
-import { BUILDER } from "@/shared/repo";
-import { db } from "@/db";
-import { builds } from "@/db/schema";
-import { isReleaseAssetMatchFormValues } from "@/lib/releaseUtils";
-import { and, eq } from "drizzle-orm";
 import { getWorkflowId, getWorkflowInputs } from "@/lib/workflowUtils";
-import { getCommitShaForTag } from "@/lib/releases";
 import { nanoid } from "nanoid";
 import z from "zod";
-import { getBuildQueryConditions } from "@/lib/db";
 import { logger } from "@/lib/logger";
-
-const octokit = new Octokit({
-  auth: process.env.GITHUB_TOKEN,
-});
+import * as githubService from "@/services/githubService";
+import * as buildsService from "@/services/buildsService";
 
 export async function POST(request: Request) {
   try {
@@ -31,7 +21,9 @@ export async function POST(request: Request) {
 
     const dataFromClient = validation.data;
 
-    const commitSha = await getCommitShaForTag(dataFromClient.versionTag);
+    const commitSha = await githubService.getCommitShaForTag(
+      dataFromClient.versionTag
+    );
 
     if (!commitSha) {
       return NextResponse.json(
@@ -42,12 +34,7 @@ export async function POST(request: Request) {
 
     const data = { ...dataFromClient, commitSha };
 
-    // First, check for existing builds using conditional fields based on OS
-    const buildQueryConditions = getBuildQueryConditions(data);
-
-    const existingBuild = await db.query.builds.findFirst({
-      where: and(...buildQueryConditions),
-    });
+    const existingBuild = await buildsService.findBuild(data);
 
     if (existingBuild) {
       if (existingBuild.status === "completed") {
@@ -92,30 +79,13 @@ export async function POST(request: Request) {
           "Generated new runId for retry"
         );
 
-        // Update the existing build for retry
-        await db
-          .update(builds)
-          .set({
-            status: "pending",
-            runId: appRunId,
-            githubActionRunId: null,
-            downloadUrl: null,
-            updatedAt: new Date(),
-          })
-          .where(eq(builds.id, existingBuild.id));
+        await buildsService.updateBuildForRetry(existingBuild.id, appRunId);
 
         try {
           const workflow_id = getWorkflowId(data.os);
           const inputs = getWorkflowInputs({ ...data, runId: appRunId });
 
-          // dispatch the workflow
-          await octokit.actions.createWorkflowDispatch({
-            owner: BUILDER.owner,
-            repo: BUILDER.repo,
-            workflow_id,
-            ref: "main",
-            inputs: inputs,
-          });
+          await githubService.dispatchWorkflow(workflow_id, "main", inputs);
 
           return NextResponse.json({
             message: "Build has been retried successfully.",
@@ -127,10 +97,7 @@ export async function POST(request: Request) {
             { error, buildId: existingBuild.id },
             "Failed to retry workflow"
           );
-          await db
-            .update(builds)
-            .set({ status: "failed" })
-            .where(eq(builds.id, existingBuild.id));
+          await buildsService.updateBuildStatus(existingBuild.id, "failed");
           return NextResponse.json(
             { error: "Failed to retry the build." },
             { status: 500 }
@@ -139,27 +106,13 @@ export async function POST(request: Request) {
       }
     }
 
-    const shortSha = data.commitSha.substring(0, 7);
-    const fullTag = `${data.versionTag}-${shortSha}`;
-
     try {
-      const release = await octokit.repos.getReleaseByTag({
-        owner: BUILDER.owner,
-        repo: BUILDER.repo,
-        tag: fullTag,
-      });
-      const existingAsset = release.data.assets.find((asset) =>
-        isReleaseAssetMatchFormValues(asset.name, data)
-      );
+      const existingAsset = await githubService.findMatchingReleaseAsset(data);
       if (existingAsset) {
-        const [newBuild] = await db
-          .insert(builds)
-          .values({
-            ...data,
-            status: "completed",
-            downloadUrl: existingAsset.browser_download_url,
-          })
-          .returning();
+        const newBuild = await buildsService.createCompletedBuild(
+          data,
+          existingAsset.browser_download_url
+        );
         return NextResponse.json({
           message: "Build found on GitHub!",
           status: "completed",
@@ -167,23 +120,17 @@ export async function POST(request: Request) {
           downloadUrl: existingAsset.browser_download_url,
         });
       }
-    } catch (error: any) {
-      if (error.status !== 404) {
-        logger.error({ error, tag: fullTag }, "GitHub API error");
-        return NextResponse.json(
-          { error: "Failed to check releases on GitHub." },
-          { status: 500 }
-        );
-      }
+    } catch (error) {
+      return NextResponse.json(
+        { error: "Failed to check releases on GitHub." },
+        { status: 500 }
+      );
     }
 
     // Try to create a new build record with the unique constraint protection
     let newBuild;
     try {
-      [newBuild] = await db
-        .insert(builds)
-        .values({ ...data, status: "pending" })
-        .returning();
+      newBuild = await buildsService.createPendingBuild(data);
     } catch (error: any) {
       // Handle unique constraint violation (duplicate build)
       if (error.message && error.message.includes("UNIQUE constraint failed")) {
@@ -192,11 +139,7 @@ export async function POST(request: Request) {
           "Duplicate build detected on insert, checking existing build"
         );
 
-        const duplicateQueryConditions = getBuildQueryConditions(data);
-
-        const duplicateBuild = await db.query.builds.findFirst({
-          where: and(...duplicateQueryConditions),
-        });
+        const duplicateBuild = await buildsService.findBuild(data);
 
         if (duplicateBuild) {
           return NextResponse.json({
@@ -220,28 +163,14 @@ export async function POST(request: Request) {
       const appRunId = nanoid(5);
       const inputs = getWorkflowInputs({ ...data, runId: appRunId });
 
-      // Update build with the runId for webhook matching
-      await db
-        .update(builds)
-        .set({
-          runId: appRunId,
-          updatedAt: new Date(),
-        })
-        .where(eq(builds.id, newBuild.id));
+      await buildsService.updateBuildRunId(newBuild.id, appRunId);
 
       logger.info(
         { buildId: newBuild.id, runId: appRunId },
         "Created build record and generated runId"
       );
 
-      // Trigger the GitHub Action
-      await octokit.actions.createWorkflowDispatch({
-        owner: BUILDER.owner,
-        repo: BUILDER.repo,
-        workflow_id,
-        ref: "main",
-        inputs: inputs,
-      });
+      await githubService.dispatchWorkflow(workflow_id, "main", inputs);
 
       return NextResponse.json({
         message: "Build has been queued successfully.",
@@ -253,10 +182,7 @@ export async function POST(request: Request) {
         { error, buildId: newBuild.id },
         "Failed to trigger workflow"
       );
-      await db
-        .update(builds)
-        .set({ status: "failed" })
-        .where(eq(builds.id, newBuild.id));
+      await buildsService.updateBuildStatus(newBuild.id, "failed");
       return NextResponse.json(
         { error: "Failed to trigger a new build." },
         { status: 500 }
