@@ -5,8 +5,6 @@ import { getDictionary } from "@/get-dictionary";
 import { Locale } from "@/i18n-config";
 import { getAndCacheTags } from "@/lib/tags";
 import LocaleSwitcher from "@/components/locale-switcher";
-import { headers } from "next/headers";
-import { BuildFormValuesType } from "@/shared/form";
 import {
   Card,
   CardContent,
@@ -14,15 +12,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import BuilderClientComponent from "@/components/builder-client-component";
 import ProvenanceHelper from "@/components/provenance-helper";
-import { getReleaseByTag } from "@/services/githubService";
-
-function getOS(userAgent: string): "linux" | "windows" | "macos" {
-  if (/mac/i.test(userAgent)) return "macos";
-  if (/win/i.test(userAgent)) return "windows";
-  return "linux"; // Default to Linux
-}
+import Builder from "@/components/builder";
 
 export default async function Home({
   params,
@@ -32,22 +23,7 @@ export default async function Home({
   const { lang } = await params;
   const dictionary = await getDictionary(lang);
   const tags = await getAndCacheTags();
-  const userAgent = (await headers()).get("user-agent") || "";
   const latestTag = tags.find((t) => !t.name.includes("testnet"));
-
-  const initialBuilderTag = latestTag ? latestTag.name : "";
-
-  const initialRelease = await getReleaseByTag(initialBuilderTag);
-
-  const initialBuildValues: BuildFormValuesType = {
-    os: getOS(userAgent),
-    arch: "x86_64",
-    versionTag: latestTag?.name || "",
-    glibcVersion: "2.39",
-    staticOpenssl: true,
-    opensslVersion: "3",
-    compatibilityMode: false,
-  };
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 md:py-24">
@@ -76,12 +52,7 @@ export default async function Home({
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <BuilderClientComponent
-                dictionary={dictionary}
-                tags={tags}
-                initialBuildValues={initialBuildValues}
-                initialRelease={initialRelease}
-              />
+              <Builder dictionary={dictionary} />
             </CardContent>
           </Card>
         </div>
