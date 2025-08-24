@@ -8,4 +8,4 @@ export type workflowInputsType = BuildFormValuesType & {
 
 export type BuildTableInsertType = typeof builds.$inferInsert;
 
-export type BuildRecordTYpe = typeof builds.$inferSelect;
+export type BuildRecordType = typeof builds.$inferSelect;

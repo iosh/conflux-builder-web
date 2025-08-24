@@ -3,7 +3,7 @@ import { builds } from "@/db/schema";
 import { getBuildQueryConditions } from "@/lib/db";
 import {
   BuildTableInsertType,
-  BuildRecordTYpe,
+  BuildRecordType,
   workflowInputsType,
 } from "@/shared/types";
 import { and, eq } from "drizzle-orm";
@@ -18,7 +18,7 @@ export async function findBuild(data: workflowInputsType) {
 export async function createCompletedBuild(
   data: BuildTableInsertType,
   downloadUrl: string
-) {
+): Promise<BuildRecordType> {
   const [newBuild] = await db
     .insert(builds)
     .values({
@@ -30,7 +30,9 @@ export async function createCompletedBuild(
   return newBuild;
 }
 
-export async function createPendingBuild(data: BuildTableInsertType) {
+export async function createPendingBuild(
+  data: BuildTableInsertType
+): Promise<BuildRecordType> {
   const [newBuild] = await db
     .insert(builds)
     .values({ ...data, status: "pending" })

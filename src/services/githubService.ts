@@ -36,7 +36,7 @@ export const getCommitShaForTag = cache(
     }
   },
   ["commit-sha-for-tag"],
-  { revalidate: 600 } // Cache for 10 minutes, This result is stable so we can cache it.
+  { revalidate: 10 * 60 } // Cache for 10 minutes, This result is stable so we can cache it.
 );
 
 export async function findMatchingReleaseAsset(
