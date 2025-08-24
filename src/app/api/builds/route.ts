@@ -5,12 +5,13 @@ import { BUILDER } from "@/shared/repo";
 import { db } from "@/db";
 import { builds } from "@/db/schema";
 import { isReleaseAssetMatchFormValues } from "@/lib/releaseUtils";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { getWorkflowId, getWorkflowInputs } from "@/lib/workflowUtils";
 import { getCommitShaForTag } from "@/lib/releases";
 import { nanoid } from "nanoid";
 import z from "zod";
 import { getBuildQueryConditions } from "@/lib/db";
+import { logger } from "@/lib/logger";
 
 const octokit = new Octokit({
   auth: process.env.GITHUB_TOKEN,
@@ -63,8 +64,9 @@ export async function POST(request: Request) {
         existingBuild.status === "pending" ||
         existingBuild.status === "in_progress"
       ) {
-        console.log(
-          `Build ${existingBuild.id} is already ${existingBuild.status}, preventing duplicate`
+        logger.info(
+          { buildId: existingBuild.id, status: existingBuild.status },
+          "Build is already in progress, preventing duplicate"
         );
         return NextResponse.json({
           message: "Build is already in progress.",
@@ -78,14 +80,16 @@ export async function POST(request: Request) {
         existingBuild.status === "failed" ||
         existingBuild.status === "cancelled"
       ) {
-        console.log(
-          `Retrying ${existingBuild.status} build ${existingBuild.id}`
+        logger.info(
+          { buildId: existingBuild.id, status: existingBuild.status },
+          "Retrying build"
         );
 
         const appRunId = nanoid(5);
 
-        console.log(
-          `Retrying build ${existingBuild.id} with new runId: ${appRunId}`
+        logger.info(
+          { buildId: existingBuild.id, runId: appRunId },
+          "Generated new runId for retry"
         );
 
         // Update the existing build for retry
@@ -119,7 +123,10 @@ export async function POST(request: Request) {
             buildId: existingBuild.id,
           });
         } catch (error) {
-          console.error("Failed to retry workflow:", error);
+          logger.error(
+            { error, buildId: existingBuild.id },
+            "Failed to retry workflow"
+          );
           await db
             .update(builds)
             .set({ status: "failed" })
@@ -162,7 +169,7 @@ export async function POST(request: Request) {
       }
     } catch (error: any) {
       if (error.status !== 404) {
-        console.error("GitHub API error:", error);
+        logger.error({ error, tag: fullTag }, "GitHub API error");
         return NextResponse.json(
           { error: "Failed to check releases on GitHub." },
           { status: 500 }
@@ -180,7 +187,10 @@ export async function POST(request: Request) {
     } catch (error: any) {
       // Handle unique constraint violation (duplicate build)
       if (error.message && error.message.includes("UNIQUE constraint failed")) {
-        console.log("Duplicate build detected, checking existing build");
+        logger.warn(
+          { data: data },
+          "Duplicate build detected on insert, checking existing build"
+        );
 
         const duplicateQueryConditions = getBuildQueryConditions(data);
 
@@ -198,7 +208,7 @@ export async function POST(request: Request) {
         }
       }
 
-      console.error("Failed to create build record:", error);
+      logger.error({ error }, "Failed to create build record");
       return NextResponse.json(
         { error: "Failed to create build record." },
         { status: 500 }
@@ -219,7 +229,10 @@ export async function POST(request: Request) {
         })
         .where(eq(builds.id, newBuild.id));
 
-      console.log(`Created build ${newBuild.id} with runId: ${appRunId}`);
+      logger.info(
+        { buildId: newBuild.id, runId: appRunId },
+        "Created build record and generated runId"
+      );
 
       // Trigger the GitHub Action
       await octokit.actions.createWorkflowDispatch({
@@ -236,7 +249,10 @@ export async function POST(request: Request) {
         buildId: newBuild.id,
       });
     } catch (error) {
-      console.error("Failed to trigger workflow:", error);
+      logger.error(
+        { error, buildId: newBuild.id },
+        "Failed to trigger workflow"
+      );
       await db
         .update(builds)
         .set({ status: "failed" })
@@ -247,7 +263,7 @@ export async function POST(request: Request) {
       );
     }
   } catch (error) {
-    console.error("Build request failed:", error);
+    logger.error({ error }, "Build request failed");
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }

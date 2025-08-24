@@ -6,6 +6,7 @@ import { BUILDER } from "@/shared/repo";
 import { isReleaseAssetMatchFormValues } from "@/lib/releaseUtils";
 import { buildSchema } from "@/shared/form";
 import { Webhooks } from "@octokit/webhooks";
+import { logger } from "@/lib/logger";
 
 import type { WorkflowRunEvent, ReleaseEvent } from "@octokit/webhooks-types";
 
@@ -23,13 +24,13 @@ export async function POST(request: NextRequest) {
 
     // Verify webhook signature
     if (!process.env.GITHUB_WEBHOOK_SECRET || !signature) {
-      console.error("Missing webhook secret or signature");
+      logger.error("Missing webhook secret or signature");
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
     }
 
     const isValid = await getWebhooks().verify(payload, signature);
     if (!isValid) {
-      console.error("Invalid webhook signature");
+      logger.error("Invalid webhook signature");
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
     }
 
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ message: "Event not handled" }, { status: 200 });
   } catch (error) {
-    console.error("Webhook error:", error);
+    logger.error({ error }, "Webhook error");
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -78,8 +79,14 @@ async function handleWorkflowRun(body: WorkflowRunEvent) {
   const githubRunId = workflow_run.id.toString();
   const displayTitle = workflow_run.display_title || "";
 
-  console.log(
-    `Workflow run ${action}: ${displayTitle} (GitHub ID: ${githubRunId})`
+  logger.info(
+    {
+      action,
+      displayTitle,
+      githubRunId,
+      repo: repository.full_name,
+    },
+    "Workflow run event received"
   );
 
   // Extract the app runId from display title
@@ -90,7 +97,7 @@ async function handleWorkflowRun(body: WorkflowRunEvent) {
 
   if (runIdMatch) {
     const appRunId = runIdMatch[1];
-    console.log(`Extracted app runId from display title: ${appRunId}`);
+    logger.info({ appRunId }, `Extracted app runId from display title`);
 
     build = await db.query.builds.findFirst({
       where: eq(builds.runId, appRunId),
@@ -98,8 +105,9 @@ async function handleWorkflowRun(body: WorkflowRunEvent) {
 
     // Update the build with the GitHub workflow run ID if found
     if (build && !build.githubActionRunId) {
-      console.log(
-        `Linking build ${build.id} with GitHub workflow run ${githubRunId}`
+      logger.info(
+        { buildId: build.id, githubRunId },
+        `Linking build with GitHub workflow run`
       );
       await db
         .update(builds)
@@ -110,15 +118,16 @@ async function handleWorkflowRun(body: WorkflowRunEvent) {
         .where(eq(builds.id, build.id));
     }
   } else {
-    console.log(`Could not extract runId from display title: ${displayTitle}`);
+    logger.warn({ displayTitle }, `Could not extract runId from display title`);
     build = await db.query.builds.findFirst({
       where: eq(builds.githubActionRunId, githubRunId),
     });
   }
 
   if (!build) {
-    console.log(
-      `No matching build found for workflow run ${githubRunId}: ${displayTitle}`
+    logger.warn(
+      { githubRunId, displayTitle },
+      `No matching build found for workflow run`
     );
     return NextResponse.json(
       { message: "No matching build found" },
@@ -133,7 +142,7 @@ async function handleWorkflowRun(body: WorkflowRunEvent) {
       .set({ status: "in_progress" })
       .where(eq(builds.id, build.id));
 
-    console.log(`Build ${build.id} marked as in_progress`);
+    logger.info({ buildId: build.id }, `Build marked as in_progress`);
     return NextResponse.json({
       message: "Build status updated to in_progress",
     });
@@ -141,8 +150,9 @@ async function handleWorkflowRun(body: WorkflowRunEvent) {
 
   if (action === "completed") {
     if (workflow_run.conclusion === "success") {
-      console.log(
-        `Workflow ${githubRunId} completed successfully, checking for release assets`
+      logger.info(
+        { githubRunId },
+        `Workflow completed successfully, checking for release assets`
       );
 
       await db
@@ -150,8 +160,9 @@ async function handleWorkflowRun(body: WorkflowRunEvent) {
         .set({ status: "build_success" })
         .where(eq(builds.id, build.id));
 
-      console.log(
-        `Build ${build.id} marked as successful (conclusion: ${workflow_run.conclusion})`
+      logger.info(
+        { buildId: build.id, conclusion: workflow_run.conclusion },
+        `Build marked as successful`
       );
     } else if (
       workflow_run.conclusion === "failure" ||
@@ -163,12 +174,14 @@ async function handleWorkflowRun(body: WorkflowRunEvent) {
         .set({ status: "failed" })
         .where(eq(builds.id, build.id));
 
-      console.log(
-        `Build ${build.id} marked as failed (conclusion: ${workflow_run.conclusion})`
+      logger.warn(
+        { buildId: build.id, conclusion: workflow_run.conclusion },
+        `Build marked as failed`
       );
     } else {
-      console.log(
-        `Workflow ${githubRunId} completed with conclusion: ${workflow_run.conclusion}`
+      logger.info(
+        { githubRunId, conclusion: workflow_run.conclusion },
+        `Workflow completed with unhandled conclusion`
       );
     }
 
@@ -216,8 +229,9 @@ async function handleRelease(body: ReleaseEvent) {
     build.commitSha.startsWith(shortSha)
   );
 
-  console.log(
-    `Release ${tag} published, checking ${relevantBuilds.length} builds for assets`
+  logger.info(
+    { tag, buildCount: relevantBuilds.length },
+    `Release event received, checking builds for assets`
   );
 
   // Update builds with matching release assets
@@ -225,7 +239,7 @@ async function handleRelease(body: ReleaseEvent) {
   for (const build of relevantBuilds) {
     // Skip builds that already have download URLs (already processed)
     if (build.downloadUrl) {
-      console.log(`Build ${build.id} already has download URL, skipping`);
+      logger.info({ buildId: build.id }, `Build already has download URL, skipping`);
       continue;
     }
 
@@ -252,16 +266,22 @@ async function handleRelease(body: ReleaseEvent) {
           .where(eq(builds.id, build.id));
 
         assetsMatched++;
-        console.log(
-          `Matched asset ${matchingAsset.name} for build ${build.id}`
+        logger.info(
+          { assetName: matchingAsset.name, buildId: build.id },
+          `Matched asset for build`
         );
       } else {
-        console.log(
-          `No matching asset found for build ${build.id} (${buildParams.os}-${buildParams.arch})`
+        logger.info(
+          {
+            buildId: build.id,
+            os: buildParams.os,
+            arch: buildParams.arch,
+          },
+          `No matching asset found for build`
         );
       }
     } catch (error) {
-      console.error(`Error processing build ${build.id}:`, error);
+      logger.error({ error, buildId: build.id }, `Error processing build`);
     }
   }
 
