@@ -1,7 +1,7 @@
 {
   "page": {
     "title": "Conflux Builder",
-    "description": "Conflux Builder ensures the integrity of every build. Each artifact is accompanied by a provenance file, cryptographically guaranteeing that it was compiled securely within our trusted GitHub Actions workflow.",
+    "description": "To enhance transparency, Conflux Builder includes a provenance file with every build artifact. This file serves as a record that the artifact was compiled within our GitHub Actions workflow, making its origin traceable.",
     "form": {
       "versionTag": "Version Tag",
       "versionTagPlaceholder": "Select a version",

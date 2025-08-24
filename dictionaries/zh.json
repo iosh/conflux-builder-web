@@ -1,7 +1,7 @@
 {
   "page": {
     "title": "Conflux 构建工具",
-    "description": "Conflux 构建工具保障每个构建产物的完整性。每个文件都配有来源证明，通过密码学技术确保其在受信任的 GitHub Actions 工作流中安全编译。",
+    "description": "Conflux 构建工具为每个构建产物附加来源证明，以提升构建过程的透明度。这份证明记录了文件是在我们的 GitHub Actions 工作流中编译生成的，让其来源清晰可溯。",
     "form": {
       "versionTag": "版本标签",
       "versionTagPlaceholder": "选择版本",
