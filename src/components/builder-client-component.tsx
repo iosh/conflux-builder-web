@@ -30,11 +30,13 @@ export default function BuilderClientComponent({
     useState<BuildFormValuesType>(initialBuildValues);
   const builderTag = buildValues.versionTag;
 
-  const { data: release, isPending } = useQuery<GithubRelease>({
-    initialData: initialRelease ?? undefined,
+  const { data: release, isPending } = useQuery({
     queryKey: ["release", builderTag],
-    queryFn: () => fetchReleaseByTag(builderTag!),
+    queryFn: ({ queryKey }) => fetchReleaseByTag(queryKey[1] as string),
     enabled: !!builderTag,
+    initialData:
+      builderTag === initialRelease?.tag_name ? initialRelease : undefined,
+    staleTime: 0,
     retry: false,
   });
 

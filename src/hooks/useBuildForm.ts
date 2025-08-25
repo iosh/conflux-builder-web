@@ -89,7 +89,7 @@ export function useBuildForm({
   useEffect(() => {
     setCurrentBuildStatus(null);
     setBuildId(null);
-  }, [formValues]);
+  }, []);
 
   const buttonState = useMemo(() => {
     const { buttonStates, buildButton } = dictionary.page.form;
