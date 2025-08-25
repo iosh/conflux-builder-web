@@ -5,9 +5,10 @@ import { logger } from "@/lib/logger";
 import { BuildFormValuesType } from "@/shared/form";
 import { isReleaseAssetMatchFormValues } from "@/lib/releaseUtils";
 import { GithubRelease, GitHubTag } from "@/shared/githubTypes";
+import { config } from "@/config";
 
 const octokit = new Octokit({
-  auth: process.env.GITHUB_TOKEN,
+  auth: config.GITHUB_TOKEN,
 });
 
 export const getCommitShaCacheTag = (versionTag: string) =>

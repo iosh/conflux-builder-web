@@ -14,10 +14,11 @@ import {
   getCommitShaCacheTag,
   getReleaseCacheTag,
 } from "@/services/githubService";
+import { config } from "@/config";
 
 function getWebhooks() {
   return new Webhooks({
-    secret: process.env.GITHUB_WEBHOOK_SECRET || "",
+    secret: config.GITHUB_WEBHOOK_SECRET,
   });
 }
 
@@ -28,7 +29,7 @@ export async function POST(request: NextRequest) {
     const event = request.headers.get("x-github-event");
 
     // Verify webhook signature
-    if (!process.env.GITHUB_WEBHOOK_SECRET || !signature) {
+    if (!signature) {
       logger.error("Missing webhook secret or signature");
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
     }

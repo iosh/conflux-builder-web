@@ -6,11 +6,12 @@ import { Octokit } from "@octokit/rest";
 import { BUILDER } from "@/shared/repo";
 import { unstable_cache } from "next/cache";
 import { BuildRecordType } from "@/shared/types";
+import { config } from "@/config";
 
 type BuildStatus = BuildRecordType["status"];
 
 const octokit = new Octokit({
-  auth: process.env.GITHUB_TOKEN,
+  auth: config.GITHUB_TOKEN,
 });
 
 const DEFAULT_TIME_OUT = {
