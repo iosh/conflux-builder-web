@@ -4,7 +4,7 @@ import { unstable_cache as cache } from "next/cache";
 import { logger } from "@/lib/logger";
 import { BuildFormValuesType } from "@/shared/form";
 import { isReleaseAssetMatchFormValues } from "@/lib/releaseUtils";
-import { GithubRelease } from "@/shared/actionsTypes";
+import { GithubRelease, GitHubTag } from "@/shared/githubTypes";
 
 const octokit = new Octokit({
   auth: process.env.GITHUB_TOKEN,
@@ -134,11 +134,34 @@ export async function getReleaseByTag(
     ["github-release-by-tag", versionTag],
     {
       revalidate: 3 * 60,
-      tags: [
-        getReleaseCacheTag(versionTag),
-        getCommitShaCacheTag(versionTag),
-      ],
+      tags: [getReleaseCacheTag(versionTag), getCommitShaCacheTag(versionTag)],
     }
+  );
+
+  return cached();
+}
+
+export const getTagsCacheTag = (perPage = 5) => `github-tags:${perPage}`;
+
+export async function getAndCacheTags(perPage = 5): Promise<GitHubTag[]> {
+  const cached = cache(
+    async (): Promise<GitHubTag[]> => {
+      try {
+        const { data: remoteTags } = await octokit.repos.listTags({
+          owner: CONFLUX_RUST.owner,
+          repo: CONFLUX_RUST.repo,
+          per_page: perPage,
+          page: 1,
+        });
+
+        return remoteTags ?? [];
+      } catch (error: any) {
+        logger.error({ error }, "Failed to fetch tags from GitHub");
+        return [];
+      }
+    },
+    ["github-tags", String(perPage)],
+    { revalidate: 10 * 60, tags: [getTagsCacheTag(perPage)] }
   );
 
   return cached();

@@ -10,15 +10,14 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import type { DictionaryType } from "@/get-dictionary";
 import type { BuildFormValuesType } from "@/shared/form";
-import type { getAndCacheTags } from "@/lib/tags";
 import { useFormContext } from "./context";
 import { useStore } from "@tanstack/react-form";
+import { GitHubTag } from "@/shared/githubTypes";
 
-type Tags = Awaited<ReturnType<typeof getAndCacheTags>>;
 
 interface BuildFormFieldsProps {
   dictionary: DictionaryType;
-  tags: Tags;
+  tags: GitHubTag[];
 }
 
 export const BuildFormFields = ({ dictionary, tags }: BuildFormFieldsProps) => {

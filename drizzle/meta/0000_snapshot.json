@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "6d83df21-7bba-4b78-bcd1-8f27aef7cb0b",
+  "id": "e72debf9-2e83-453c-85c0-06020584c077",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "builds": {
@@ -129,60 +129,6 @@
             "openssl_version",
             "static_openssl",
             "compatibility_mode"
-          ],
-          "isUnique": true
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "tags": {
-      "name": "tags",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "commit_sha": {
-          "name": "commit_sha",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false,
-          "default": "(strftime('%s', 'now'))"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        }
-      },
-      "indexes": {
-        "tags_name_unique": {
-          "name": "tags_name_unique",
-          "columns": [
-            "name"
           ],
           "isUnique": true
         }

@@ -21,7 +21,7 @@ import {
   Wrench,
   Github,
 } from "lucide-react";
-import { GithubRelease, GithubReleaseAsset } from "@/shared/actionsTypes";
+import { GithubRelease, GithubReleaseAsset } from "@/shared/githubTypes";
 import { ShineBorder } from "./magicui/shine-border";
 import { BuildFormValuesType } from "@/shared/form";
 import {

@@ -1,20 +1,16 @@
 "use client";
-
-import type { getAndCacheTags } from "@/lib/tags";
 import type { DictionaryType } from "@/get-dictionary";
 import { BuildFormValuesType } from "@/shared/form";
-import { GithubRelease } from "@/shared/actionsTypes";
+import { GithubRelease, GitHubTag } from "@/shared/githubTypes";
 import { useBuildForm } from "@/hooks/useBuildForm";
 import { FormContext } from "./context";
 import BuildButton from "./BuildButton";
 import { BuildFormFields } from "./fields";
 
-type Tags = Awaited<ReturnType<typeof getAndCacheTags>>;
-
 interface BuildFormProps {
   initValues: BuildFormValuesType;
   dictionary: DictionaryType;
-  tags: Tags;
+  tags: GitHubTag[];
   onValuesChange?: (values: BuildFormValuesType) => void;
   releaseList?: GithubRelease;
 }

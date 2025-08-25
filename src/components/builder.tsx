@@ -1,6 +1,5 @@
 import { headers } from "next/headers";
-import { getAndCacheTags } from "@/lib/tags";
-import { getReleaseByTag } from "@/services/githubService";
+import { getAndCacheTags, getReleaseByTag } from "@/services/githubService";
 import { BuildFormValuesType } from "@/shared/form";
 import { getOS } from "@/lib/utils";
 import BuilderClientComponent from "@/components/builder-client-component";

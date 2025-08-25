@@ -1,4 +1,4 @@
-import { GithubRelease } from "@/shared/actionsTypes";
+import { GithubRelease } from "@/shared/githubTypes";
 import { BuildApiResponse, BuildStatusApiResponse } from "@/shared/api";
 import { BuildFormValuesType } from "@/shared/form";
 

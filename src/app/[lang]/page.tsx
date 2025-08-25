@@ -3,7 +3,6 @@ import { AnimatedShinyText } from "@/components/magicui/animated-shiny-text";
 import { cn } from "@/lib/utils";
 import { getDictionary } from "@/get-dictionary";
 import { Locale } from "@/i18n-config";
-import { getAndCacheTags } from "@/lib/tags";
 import LocaleSwitcher from "@/components/locale-switcher";
 import {
   Card,
@@ -14,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import ProvenanceHelper from "@/components/provenance-helper";
 import Builder from "@/components/builder";
+import { getAndCacheTags } from "@/services/githubService";
 
 export default async function Home({
   params,

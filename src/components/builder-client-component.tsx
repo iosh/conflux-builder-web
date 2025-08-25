@@ -4,12 +4,11 @@ import { useState, useMemo } from "react";
 import { BuildFormValuesType } from "@/shared/form";
 import { getDictionary } from "@/get-dictionary";
 import { Locale } from "@/i18n-config";
-import { GitHubTag } from "@/lib/tags";
 import BuildForm from "./build-form";
 import ReleaseList from "./release-list";
 import NoReleaseFound from "./no-release-found";
 import { Skeleton } from "@/components/ui/skeleton";
-import { GithubRelease } from "@/shared/actionsTypes";
+import { GithubRelease, GitHubTag } from "@/shared/githubTypes";
 import { useQuery } from "@tanstack/react-query";
 import { fetchReleaseByTag } from "@/lib/api";
 

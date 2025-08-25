@@ -6,7 +6,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { buildForm, BuildFormValuesType, buildSchema } from "@/shared/form";
 import type { BuildApiResponse, BuildStatusApiResponse } from "@/shared/api";
 import { fetchBuildStatus, postBuildRequest } from "@/lib/api";
-import { GithubRelease } from "@/shared/actionsTypes";
+import { GithubRelease } from "@/shared/githubTypes";
 import { isReleaseAssetMatchFormValues } from "@/lib/releaseUtils";
 import type { DictionaryType } from "@/get-dictionary";
 

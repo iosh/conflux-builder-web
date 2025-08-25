@@ -10,6 +10,14 @@ import * as buildsService from "@/services/buildsService";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    logger.info(
+      {
+        versionTag: body.versionTag,
+        os: body.os,
+        arch: body.arch,
+      },
+      "Received build request"
+    );
     const validation = buildSchema.safeParse(body);
 
     if (!validation.success) {
@@ -21,9 +29,30 @@ export async function POST(request: Request) {
 
     const dataFromClient = validation.data;
 
-    const commitSha = await githubService.getCommitShaForTag(
-      dataFromClient.versionTag
+    const supportedTagsList = await githubService.getAndCacheTags();
+
+    if (!supportedTagsList || supportedTagsList.length === 0) {
+      logger.error("Failed to fetch supported tags from GitHub");
+      return NextResponse.json(
+        { error: "Unable to validate version tag. Please try again later." },
+        { status: 503 }
+      );
+    }
+
+    const validVersionTag = supportedTagsList.find(
+      (tag) => tag.name === dataFromClient.versionTag
     );
+
+    if (!validVersionTag) {
+      return NextResponse.json(
+        {
+          error: `Version tag "${dataFromClient.versionTag}" is not supported.`,
+        },
+        { status: 400 }
+      );
+    }
+
+    const commitSha = validVersionTag.commit.sha;
 
     if (!commitSha) {
       return NextResponse.json(

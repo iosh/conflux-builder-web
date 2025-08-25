@@ -6,18 +6,6 @@ import {
 } from "drizzle-orm/sqlite-core";
 import { sql } from "drizzle-orm";
 
-export const tags = sqliteTable("tags", {
-  id: integer("id").primaryKey(),
-  name: text("name").notNull().unique(),
-  commitSha: text("commit_sha").notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" }).default(
-    sql`(strftime('%s', 'now'))`
-  ),
-  updatedAt: integer("updated_at", { mode: "timestamp" }).$onUpdate(
-    () => new Date()
-  ),
-});
-
 export const builds = sqliteTable(
   "builds",
   {
