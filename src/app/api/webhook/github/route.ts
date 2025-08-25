@@ -7,8 +7,13 @@ import { isReleaseAssetMatchFormValues } from "@/lib/releaseUtils";
 import { buildSchema } from "@/shared/form";
 import { Webhooks } from "@octokit/webhooks";
 import { logger } from "@/lib/logger";
+import { revalidateTag } from "next/cache";
 
 import type { WorkflowRunEvent, ReleaseEvent } from "@octokit/webhooks-types";
+import {
+  getCommitShaCacheTag,
+  getReleaseCacheTag,
+} from "@/services/githubService";
 
 function getWebhooks() {
   return new Webhooks({
@@ -239,7 +244,10 @@ async function handleRelease(body: ReleaseEvent) {
   for (const build of relevantBuilds) {
     // Skip builds that already have download URLs (already processed)
     if (build.downloadUrl) {
-      logger.info({ buildId: build.id }, `Build already has download URL, skipping`);
+      logger.info(
+        { buildId: build.id },
+        `Build already has download URL, skipping`
+      );
       continue;
     }
 
@@ -284,6 +292,8 @@ async function handleRelease(body: ReleaseEvent) {
       logger.error({ error, buildId: build.id }, `Error processing build`);
     }
   }
+
+  revalidateTag(getReleaseCacheTag(versionTag));
 
   return NextResponse.json({
     message: `Release assets processed: ${assetsMatched} builds updated`,

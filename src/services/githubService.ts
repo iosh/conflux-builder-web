@@ -10,34 +10,44 @@ const octokit = new Octokit({
   auth: process.env.GITHUB_TOKEN,
 });
 
-export const getCommitShaForTag = cache(
-  async (versionTag: string): Promise<string | null> => {
-    if (!versionTag) return null;
-    try {
-      const ref = await octokit.git.getRef({
-        owner: CONFLUX_RUST.owner,
-        repo: CONFLUX_RUST.repo,
-        ref: `tags/${versionTag}`,
-      });
-      return ref.data.object.sha;
-    } catch (error: any) {
-      if (error.status === 404) {
-        logger.warn(
-          { tag: versionTag, repo: CONFLUX_RUST.repo },
-          `Tag not found`
+export const getCommitShaCacheTag = (versionTag: string) =>
+  `commit-sha:${versionTag}`;
+
+export async function getCommitShaForTag(
+  versionTag: string
+): Promise<string | null> {
+  if (!versionTag) return null;
+
+  const cached = cache(
+    async (): Promise<string | null> => {
+      try {
+        const ref = await octokit.git.getRef({
+          owner: CONFLUX_RUST.owner,
+          repo: CONFLUX_RUST.repo,
+          ref: `tags/${versionTag}`,
+        });
+        return ref.data.object.sha;
+      } catch (error: any) {
+        if (error.status === 404) {
+          logger.warn(
+            { tag: versionTag, repo: CONFLUX_RUST.repo },
+            `Tag not found`
+          );
+          return null;
+        }
+        logger.error(
+          { error, tag: versionTag },
+          `Failed to get commit SHA for tag`
         );
-        return null;
+        throw error;
       }
-      logger.error(
-        { error, tag: versionTag },
-        `Failed to get commit SHA for tag`
-      );
-      throw error;
-    }
-  },
-  ["commit-sha-for-tag"],
-  { revalidate: 10 * 60 } // Cache for 10 minutes, This result is stable so we can cache it.
-);
+    },
+    ["commit-sha-for-tag", versionTag],
+    { revalidate: 10 * 60, tags: [getCommitShaCacheTag(versionTag)] }
+  );
+
+  return cached();
+}
 
 export async function findMatchingReleaseAsset(
   data: BuildFormValuesType & { commitSha: string }
@@ -85,39 +95,51 @@ export async function dispatchWorkflow(
   }
 }
 
-export const getReleaseByTag = cache(
-  async (versionTag: string): Promise<GithubRelease | null> => {
-    if (!versionTag) {
-      return null;
-    }
+export const getReleaseCacheTag = (versionTag: string) =>
+  `github-release:${versionTag}`;
+export async function getReleaseByTag(
+  versionTag: string
+): Promise<GithubRelease | null> {
+  if (!versionTag) {
+    return null;
+  }
 
-    const commitSha = await getCommitShaForTag(versionTag);
-    if (!commitSha) {
-      return null;
-    }
-
-    const shortSha = commitSha.substring(0, 7);
-    const fullTag = `${versionTag}-${shortSha}`;
-
-    try {
-      const { data: release } = await octokit.repos.getReleaseByTag({
-        owner: BUILDER.owner,
-        repo: BUILDER.repo,
-        tag: fullTag,
-      });
-
-      return release;
-    } catch (error: any) {
-      if (error.status === 404) {
-        logger.warn({ tag: fullTag }, `Release with tag not found.`);
+  const cached = cache(
+    async (): Promise<GithubRelease | null> => {
+      const commitSha = await getCommitShaForTag(versionTag);
+      if (!commitSha) {
         return null;
       }
-      logger.error({ error, tag: fullTag }, `Failed to fetch release`);
-      throw error;
+
+      const shortSha = commitSha.substring(0, 7);
+      const fullTag = `${versionTag}-${shortSha}`;
+
+      try {
+        const { data: release } = await octokit.repos.getReleaseByTag({
+          owner: BUILDER.owner,
+          repo: BUILDER.repo,
+          tag: fullTag,
+        });
+
+        return release;
+      } catch (error: any) {
+        if (error.status === 404) {
+          logger.warn({ tag: fullTag }, `Release with tag not found.`);
+          return null;
+        }
+        logger.error({ error, tag: fullTag }, `Failed to fetch release`);
+        throw error;
+      }
+    },
+    ["github-release-by-tag", versionTag],
+    {
+      revalidate: 3 * 60,
+      tags: [
+        getReleaseCacheTag(versionTag),
+        getCommitShaCacheTag(versionTag),
+      ],
     }
-  },
-  ["github-release-by-tag"], // Base cache key
-  {
-    revalidate: 3 * 60, // Revalidate every 3 minutes
-  }
-);
+  );
+
+  return cached();
+}
