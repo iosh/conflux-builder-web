@@ -1,4 +1,3 @@
-import { RetroGrid } from "@/components/magicui/retro-grid";
 import { AnimatedShinyText } from "@/components/magicui/animated-shiny-text";
 import { cn } from "@/lib/utils";
 import { getDictionary } from "@/get-dictionary";
@@ -63,7 +62,6 @@ export default async function Home({
           />
         </div>
       </div>
-      <RetroGrid />
     </main>
   );
 }
