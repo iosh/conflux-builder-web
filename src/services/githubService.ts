@@ -144,7 +144,7 @@ export async function getReleaseByTag(
 
 export const getTagsCacheTag = (perPage = 5) => `github-tags:${perPage}`;
 
-export async function getAndCacheTags(perPage = 5): Promise<GitHubTag[]> {
+export async function getConfluxRepoTags(perPage = 5): Promise<GitHubTag[]> {
   const cached = cache(
     async (): Promise<GitHubTag[]> => {
       try {
@@ -163,6 +163,41 @@ export async function getAndCacheTags(perPage = 5): Promise<GitHubTag[]> {
     },
     ["github-tags", String(perPage)],
     { revalidate: 10 * 60, tags: [getTagsCacheTag(perPage)] }
+  );
+
+  return cached();
+}
+
+export async function getCachedWorkflowRun(runId: string) {
+  const cached = cache(
+    async () => {
+      try {
+        console.log(`Fetching GitHub workflow run ${runId} from API`);
+        const workflowRun = await octokit.actions.getWorkflowRun({
+          owner: BUILDER.owner,
+          repo: BUILDER.repo,
+          run_id: parseInt(runId),
+        });
+        return {
+          status: workflowRun.data.status,
+          conclusion: workflowRun.data.conclusion,
+          success: true,
+        };
+      } catch (error) {
+        console.error(`Failed to fetch workflow run ${runId}:`, error);
+        return {
+          status: null,
+          conclusion: null,
+          success: false,
+          error: error instanceof Error ? error.message : "Unknown error",
+        };
+      }
+    },
+    ["github-workflow-run"],
+    {
+      revalidate: 3 * 60, // 3 minutes
+      tags: ["github-api", `github-workflow-run:${runId}`],
+    }
   );
 
   return cached();

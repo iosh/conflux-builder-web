@@ -2,54 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { builds } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { Octokit } from "@octokit/rest";
-import { BUILDER } from "@/shared/repo";
-import { unstable_cache } from "next/cache";
 import { BuildRecordType } from "@/shared/types";
-import { config } from "@/config";
+import { getCachedWorkflowRun } from "@/services/githubService";
 
 type BuildStatus = BuildRecordType["status"];
-
-const octokit = new Octokit({
-  auth: config.GITHUB_TOKEN,
-});
 
 const DEFAULT_TIME_OUT = {
   windows: 30 * 60 * 1000,
   linux: 20 * 60 * 1000,
   macos: 15 * 60 * 1000,
 };
-
-const getCachedWorkflowRun = unstable_cache(
-  async (runId: string) => {
-    try {
-      console.log(`Fetching GitHub workflow run ${runId} from API`);
-      const workflowRun = await octokit.actions.getWorkflowRun({
-        owner: BUILDER.owner,
-        repo: BUILDER.repo,
-        run_id: parseInt(runId),
-      });
-      return {
-        status: workflowRun.data.status,
-        conclusion: workflowRun.data.conclusion,
-        success: true,
-      };
-    } catch (error) {
-      console.error(`Failed to fetch workflow run ${runId}:`, error);
-      return {
-        status: null,
-        conclusion: null,
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-      };
-    }
-  },
-  ["github-workflow-run"],
-  {
-    revalidate: 3 * 60, // 3 minutes
-    tags: ["github-api"],
-  }
-);
 
 function shouldCheckGitHubAPI(build: BuildRecordType): boolean {
   const now = new Date();

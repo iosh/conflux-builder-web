@@ -29,7 +29,7 @@ export async function POST(request: Request) {
 
     const dataFromClient = validation.data;
 
-    const supportedTagsList = await githubService.getAndCacheTags();
+    const supportedTagsList = await githubService.getConfluxRepoTags();
 
     if (!supportedTagsList || supportedTagsList.length === 0) {
       logger.error("Failed to fetch supported tags from GitHub");

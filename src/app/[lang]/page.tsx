@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/card";
 import ProvenanceHelper from "@/components/provenance-helper";
 import Builder from "@/components/builder";
-import { getAndCacheTags } from "@/services/githubService";
+import { getConfluxRepoTags } from "@/services/githubService";
 
 export default async function Home({
   params,
@@ -22,7 +22,7 @@ export default async function Home({
 }) {
   const { lang } = await params;
   const dictionary = await getDictionary(lang);
-  const tags = await getAndCacheTags();
+  const tags = await getConfluxRepoTags();
   const latestTag = tags.find((t) => !t.name.includes("testnet"));
 
   return (

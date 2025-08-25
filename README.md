@@ -22,7 +22,6 @@ Copy the example environment file.
 cp ./env.example .env
 ```
 
-
 ### Run the development server
 
 ```bash
@@ -31,4 +30,11 @@ bun migrate
 
 # run development server
 bun --bun run dev
+```
+
+### Run test
+
+```bash
+# we use vitest to run tests (bun test command will use the bun built-in test runner)
+bun run test
 ```

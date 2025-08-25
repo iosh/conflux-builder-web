@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import { getAndCacheTags, getReleaseByTag } from "@/services/githubService";
+import { getConfluxRepoTags, getReleaseByTag } from "@/services/githubService";
 import { BuildFormValuesType } from "@/shared/form";
 import { getOS } from "@/lib/utils";
 import BuilderClientComponent from "@/components/builder-client-component";
@@ -10,7 +10,7 @@ export default async function Builder({
 }: {
   dictionary: DictionaryType;
 }) {
-  const tags = await getAndCacheTags();
+  const tags = await getConfluxRepoTags();
   const userAgent = (await headers()).get("user-agent") || "";
   const latestTag = tags.find((t) => !t.name.includes("testnet"));
   const initialBuilderTag = latestTag ? latestTag.name : "";
