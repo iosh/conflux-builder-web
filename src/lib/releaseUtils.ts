@@ -66,19 +66,40 @@ export interface AssetInfo {
   os?: string;
   arch?: string;
   isPortable: boolean;
+  glibcVersion?: string;
+  sslLinking?: "static" | "dynamic";
+  archive?: "tar.gz" | "zip";
 }
 
 export function parseAssetName(name: string): AssetInfo {
+  const lower = name.toLowerCase();
+
   const info: AssetInfo = {
     isPortable: false,
   };
 
-  if (name.includes("linux")) info.os = "Linux";
-  if (name.includes("windows")) info.os = "Windows";
-  if (name.includes("darwin")) info.os = "macOS";
+  // OS
+  if (lower.includes("linux")) info.os = "Linux";
+  if (lower.includes("windows")) info.os = "Windows";
+  if (lower.includes("darwin")) info.os = "macOS";
 
-  if (name.includes("aarch64")) info.arch = "aarch64";
-  if (name.includes("x86_64")) info.arch = "x86_64";
-  if (name.includes("portable")) info.isPortable = true;
+  if (lower.includes("aarch64")) info.arch = "aarch64";
+  if (lower.includes("x86_64")) info.arch = "x86_64";
+
+  if (lower.includes("portable")) info.isPortable = true;
+
+  if (lower.endsWith(".tar.gz")) info.archive = "tar.gz";
+  if (lower.endsWith(".zip")) info.archive = "zip";
+
+  const glibcMatch = lower.match(/glibc(\d+(?:.\d+)?)/);
+  if (glibcMatch) info.glibcVersion = glibcMatch[1];
+
+  // OpenSSL
+  if (lower.includes("dynamic-openssl")) {
+    info.sslLinking = "dynamic";
+  } else if (info.os === "Windows" || info.os === "Linux") {
+    info.sslLinking = "static";
+  }
+
   return info;
 }

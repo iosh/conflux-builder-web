@@ -19,7 +19,10 @@ import {
   Laptop,
   ShieldCheck,
   Wrench,
-  Github,
+  Archive,
+  Layers,
+  Link,
+  Package,
 } from "lucide-react";
 import { GithubRelease, GithubReleaseAsset } from "@/shared/githubTypes";
 import { ShineBorder } from "./magicui/shine-border";
@@ -150,6 +153,28 @@ export default function ReleaseList({
                     {group.info.arch && (
                       <Badge variant="secondary" className="gap-1">
                         <Cpu className="h-3 w-3" /> {group.info.arch}
+                      </Badge>
+                    )}
+                    {group.info.os === "Linux" && group.info.glibcVersion && (
+                      <Badge variant="secondary" className="gap-1">
+                        <Layers className="h-3 w-3" /> {group.info.glibcVersion}
+                      </Badge>
+                    )}
+                    {group.info.archive && (
+                      <Badge variant="secondary" className="gap-1">
+                        <Archive className="h-3 w-3" /> {group.info.archive}
+                      </Badge>
+                    )}
+
+                    {group.info.sslLinking === "static" && (
+                      <Badge variant="secondary" className="gap-1">
+                        <Package className="h-3 w-3" /> OpenSSL static
+                      </Badge>
+                    )}
+
+                    {group.info.sslLinking === "dynamic" && (
+                      <Badge variant="secondary" className="gap-1">
+                        <Link className="h-3 w-3" /> OpenSSL dynamic
                       </Badge>
                     )}
                     {group.info.isPortable && (
