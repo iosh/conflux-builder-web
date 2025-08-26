@@ -8,8 +8,35 @@ export async function generateStaticParams() {
 }
 
 export const metadata: Metadata = {
-  title: "Conflux Builder",
-  description: "Build your own Conflux binary",
+  title: {
+    default: "Conflux Builder - Build Custom Conflux Binaries",
+    template: "%s | Conflux Builder",
+  },
+  description:
+    "Build your own custom Conflux binary with different OS, architecture, and dependency configurations. All builds include provenance attestation for transparency and verification.",
+  keywords: [
+    "Conflux",
+    "blockchain",
+    "binary builder",
+    "custom build",
+    "GitHub Actions",
+    "provenance",
+    "attestation",
+    "Linux",
+    "Windows",
+    "macOS",
+    "x86_64",
+    "aarch64",
+  ],
+  publisher: "Conflux Builder",
+  applicationName: "Conflux Builder",
+  alternates: {
+    canonical: "/",
+    languages: {
+      en: "/en",
+      zh: "/zh",
+    },
+  },
 };
 
 export default async function RootLayout({
