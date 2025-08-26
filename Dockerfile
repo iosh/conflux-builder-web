@@ -7,6 +7,7 @@ RUN bun install --frozen-lockfile
 
 COPY . .
 
+ENV SKIP_ENV_VALIDATION=1
 RUN bun --bun run build
 
 FROM oven/bun:1-alpine AS runner
