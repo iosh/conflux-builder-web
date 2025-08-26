@@ -10,10 +10,7 @@ import { logger } from "@/lib/logger";
 import { revalidateTag } from "next/cache";
 
 import type { WorkflowRunEvent, ReleaseEvent } from "@octokit/webhooks-types";
-import {
-  getCommitShaCacheTag,
-  getReleaseCacheTag,
-} from "@/services/githubService";
+import { getReleaseCacheTag } from "@/services/githubService";
 import { config } from "@/config";
 
 function getWebhooks() {

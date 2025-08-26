@@ -24,6 +24,7 @@ import {
 import { GithubRelease, GithubReleaseAsset } from "@/shared/githubTypes";
 import { ShineBorder } from "./magicui/shine-border";
 import { BuildFormValuesType } from "@/shared/form";
+import BuildInProgressCard from "./build-in-progress-card";
 import {
   isReleaseAssetMatchFormValues,
   formatBytes,
@@ -44,12 +45,14 @@ interface ReleaseListProps {
   release: GithubRelease;
   dictionary: Dictionary;
   buildValues: BuildFormValuesType;
+  isBuilding: boolean;
 }
 
 export default function ReleaseList({
   release,
   dictionary,
   buildValues,
+  isBuilding,
 }: ReleaseListProps) {
   const { assetTable } = dictionary.page;
 
@@ -110,8 +113,9 @@ export default function ReleaseList({
           </a>
         </Button>
       </div>
-      {assetsToShow.length > 0 ? (
+      {assetsToShow.length > 0 || isBuilding ? (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {isBuilding && <BuildInProgressCard dictionary={dictionary} />}
           {assetsToShow.map((group) => {
             const isNameMatch = isReleaseAssetMatchFormValues(
               group.artifact.name,

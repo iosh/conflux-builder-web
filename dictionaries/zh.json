@@ -46,6 +46,10 @@
         "inProgress": "构建进行中...",
         "queued": "构建排队中...",
         "pending": "等待执行..."
+      },
+      "errors": {
+        "buildTriggerFailed": "触发构建失败",
+        "buildStatusFailed": "获取构建状态失败"
       }
     },
     "assetTable": {

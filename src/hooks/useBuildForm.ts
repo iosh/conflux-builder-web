@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useForm, useStore } from "@tanstack/react-form";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { buildForm, BuildFormValuesType, buildSchema } from "@/shared/form";
 import type { BuildApiResponse, BuildStatusApiResponse } from "@/shared/api";
 import { fetchBuildStatus, postBuildRequest } from "@/lib/api";
@@ -36,7 +37,14 @@ export function useBuildForm({
     onSuccess: (data) => {
       setBuildId(data.buildId || null);
     },
+    onError: (error) => {
+      toast.error(dictionary.page.form.errors.buildTriggerFailed, {
+        description: error.message,
+      });
+    },
   });
+
+  const queryClient = useQueryClient();
 
   const { data: statusData } = useQuery({
     queryKey: ["buildStatus", buildId],
@@ -48,12 +56,6 @@ export function useBuildForm({
     refetchInterval: 10000, // Poll every 10 seconds
     retry: (failureCount) => failureCount < 3,
   });
-
-  useEffect(() => {
-    if (statusData) {
-      setCurrentBuildStatus(statusData);
-    }
-  }, [statusData]);
 
   const form = useForm({
     ...buildForm,
@@ -73,6 +75,21 @@ export function useBuildForm({
   });
 
   const formValues = useStore(form.store, (state) => state.values);
+
+  useEffect(() => {
+    if (statusData) {
+      setCurrentBuildStatus(statusData);
+    }
+  }, [statusData]);
+
+  useEffect(() => {
+    if (currentBuildStatus?.status === "completed") {
+      queryClient.invalidateQueries({
+        queryKey: ["release", formValues.versionTag],
+      });
+    }
+  }, [currentBuildStatus?.status, queryClient, formValues.versionTag]);
+
   const osValue = formValues.os;
 
   const isReleaseIsExist = useMemo(() => {
@@ -117,6 +134,11 @@ export function useBuildForm({
     return { text: buildButton, disabled: false };
   }, [isSubmitting, currentBuildStatus, dictionary.page.form]);
 
+  const isBuilding =
+    isSubmitting ||
+    currentBuildStatus?.status === "in_progress" ||
+    currentBuildStatus?.status === "pending";
+
   const archOptions = useMemo((): BuildFormValuesType["arch"][] => {
     if (osValue === "macos") return ["aarch64"];
     if (osValue === "windows") return ["x86_64"];
@@ -149,19 +171,19 @@ export function useBuildForm({
     formValues.glibcVersion,
   ]);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    form.handleSubmit();
+    await form.handleSubmit();
   };
 
-  const handleButtonClick = () => {
+  const handleButtonClick = async () => {
     if (buttonState.isLink && buttonState.url) {
       window.open(buttonState.url, "_blank");
     } else if (buttonState.isRetry) {
       setBuildId(null);
       setCurrentBuildStatus(null);
-      form.handleSubmit();
+      await form.handleSubmit();
     }
   };
 
@@ -169,6 +191,7 @@ export function useBuildForm({
     form,
     buttonState,
     isReleaseIsExist,
+    isBuilding,
     archOptions,
     handleSubmit,
     handleButtonClick,

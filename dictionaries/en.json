@@ -47,6 +47,10 @@
         "inProgress": "Build status: in_progress...",
         "queued": "Build status: queued...",
         "pending": "Workflow run not found yet."
+      },
+      "errors": {
+        "buildTriggerFailed": "Failed to trigger build",
+        "buildStatusFailed": "Failed to get build status"
       }
     },
     "assetTable": {

@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { BuildFormValuesType } from "@/shared/form";
 import { getDictionary } from "@/get-dictionary";
-import { Locale } from "@/i18n-config";
 import BuildForm from "./build-form";
+import { useBuildForm } from "@/hooks/useBuildForm";
+import { FormContext } from "./build-form/context";
 import ReleaseList from "./release-list";
 import NoReleaseFound from "./no-release-found";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -39,6 +40,13 @@ export default function BuilderClientComponent({
     retry: false,
   });
 
+  const formState = useBuildForm({
+    initValues: buildValues,
+    dictionary,
+    onValuesChange: setBuildValues,
+    releaseList: release,
+  });
+
   const renderContent = () => {
     if (isPending) {
       return <Skeleton className="mt-8 h-64 w-full" />;
@@ -46,6 +54,7 @@ export default function BuilderClientComponent({
     if (release) {
       return (
         <ReleaseList
+          isBuilding={formState.isBuilding}
           release={release}
           buildValues={buildValues}
           dictionary={dictionary}
@@ -56,15 +65,17 @@ export default function BuilderClientComponent({
   };
 
   return (
-    <div className="w-full max-w-4xl">
-      <BuildForm
-        dictionary={dictionary}
-        tags={tags}
-        initValues={buildValues}
-        onValuesChange={setBuildValues}
-        releaseList={release}
-      />
-      <div className="mt-8">{renderContent()}</div>
-    </div>
+    <FormContext.Provider value={formState}>
+      <div className="w-full max-w-4xl">
+        <BuildForm
+          dictionary={dictionary}
+          tags={tags}
+          initValues={buildValues}
+          onValuesChange={setBuildValues}
+          releaseList={release}
+        />
+        <div className="mt-8">{renderContent()}</div>
+      </div>
+    </FormContext.Provider>
   );
 }
