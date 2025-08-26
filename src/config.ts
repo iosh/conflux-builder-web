@@ -19,14 +19,19 @@ const rawEnv = {
 
 const parsed = EnvSchema.safeParse(rawEnv);
 
-if (!shouldValidate && !parsed.success) {
+if (!shouldValidate) {
+  rawEnv.LOG_LEVEL = rawEnv.LOG_LEVEL || "info";
+  rawEnv.DB_FILE_NAME = rawEnv.DB_FILE_NAME || "database.sqlite";
+}
+
+if (shouldValidate && !parsed.success) {
   const message = parsed.error.issues
     .map((i) => `${i.path.join(".")}: ${i.message}`)
     .join("; ");
   throw new Error(`Invalid environment configuration: ${message}`);
 }
 
-export const config = (shouldValidate ? rawEnv : parsed.data) as z.infer<
+export const config = (shouldValidate ? parsed.data : rawEnv) as z.infer<
   typeof EnvSchema
 >;
 export type AppConfig = typeof config;
